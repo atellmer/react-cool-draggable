@@ -1,6 +1,6 @@
 import React, { useReducer, createContext, useMemo, useContext } from 'react';
 
-import { ID } from './types';
+import type { ID } from './types';
 
 export type DragDropContextProps = {
   onDragEnd: (options: OnDragEndOptions) => void;

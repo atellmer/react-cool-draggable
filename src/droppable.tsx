@@ -1,6 +1,5 @@
 import React, { useRef, useLayoutEffect, useEffect, memo, useMemo, createContext, useContext } from 'react';
 
-import { debounce } from './utils';
 import { useDragDropContext } from './context';
 import {
   CONTEXT_ID_ATTR,
@@ -12,8 +11,9 @@ import {
   getActiveDraggableNode,
   getScrollContainerFromContainer,
   getThreshold,
-} from './dom';
-import { ID, Direction, Pointer } from './types';
+  debounce,
+} from './utils';
+import type { ID, Direction, Pointer } from './types';
 
 export type DroppableProps = {
   direction: Direction;

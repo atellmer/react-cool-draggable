@@ -12,8 +12,8 @@ import {
   getNodeSize,
   blockScroll,
   getItemNodes,
-} from './dom';
-import { ID, Pointer, Coordinates } from './types';
+} from './utils';
+import type { ID, Pointer, Coordinates } from './types';
 
 export type DraggableProps = {
   draggableID: ID;
