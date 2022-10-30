@@ -1,13 +1,5 @@
-import React, { useState, useRef } from 'react';
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  OnDragEndOptions,
-  OnDragOverOptions,
-  reorder,
-  move,
-} from 'react-drag-on';
+import React, { useState } from 'react';
+import { DragDropContext, Droppable, Draggable, OnDragEndOptions, reorder, move } from 'react-drag-on';
 
 import { groupBy, flatten } from '../../utils';
 import {
@@ -36,8 +28,7 @@ const createItems = (count: number, groupID: string) =>
 const TrelloApp: React.FC = () => {
   const [columns, setColumns] = useState(['column-1', 'column-2', 'column-3', 'column-4']);
   const [items, setItems] = useState([...flatten(columns.map(x => createItems(5, x)))]);
-  const grouppedItems = groupBy(items, x => x.groupID);
-  const prevNearestNode = useRef<HTMLElement>(null);
+  const groupedItems = groupBy(items, x => x.groupID);
 
   const handleDragEnd = (options: OnDragEndOptions) => {
     const { isMoving, droppableGroupID } = options;
@@ -79,37 +70,6 @@ const TrelloApp: React.FC = () => {
     };
 
     map[droppableGroupID]();
-
-    if (prevNearestNode.current) {
-      const node: HTMLElement = prevNearestNode.current.querySelector('[data-card]');
-
-      node.style.removeProperty('background-color');
-      prevNearestNode.current = null;
-    }
-  };
-
-  const handleDragOver = ({ nearestNode, nearestNodeRect, targetRect }: OnDragOverOptions) => {
-    // Highlight the nearest neighbor with a color if the dragged object deviated more than half from the target object.
-    // May be needed to drag and drop elements in the tree to let the user know if the element will be inserted as a neighbor or as a child.
-
-    if (prevNearestNode.current && prevNearestNode.current !== nearestNode) {
-      const node: HTMLElement = prevNearestNode.current.querySelector('[data-card]');
-
-      node.style.removeProperty('background-color');
-    }
-
-    if (nearestNode) {
-      const isOver = targetRect.left > nearestNodeRect.left + nearestNodeRect.width / 2;
-      const node: HTMLElement = nearestNode.querySelector('[data-card]');
-
-      if (isOver) {
-        node.style.setProperty('background-color', '#8BC34A');
-      } else {
-        node.style.removeProperty('background-color');
-      }
-    }
-
-    prevNearestNode.current = nearestNode;
   };
 
   return (
@@ -129,11 +89,7 @@ const TrelloApp: React.FC = () => {
                       }) => {
                         return (
                           <Column {...columnsRootProps}>
-                            <Droppable
-                              droppableID={groupKey}
-                              droppableGroupID='columns'
-                              direction='vertical'
-                              onDragOver={handleDragOver}>
+                            <Droppable droppableID={groupKey} droppableGroupID='columns' direction='vertical'>
                               {({ snapshot, ...rest }) => {
                                 return (
                                   <>
@@ -143,7 +99,7 @@ const TrelloApp: React.FC = () => {
                                       {groupKey}
                                     </DraggableColumnHeader>
                                     <DroppableContent isDragging={snapshot.isDragging} {...rest}>
-                                      {(grouppedItems[groupKey] || []).map(x => {
+                                      {(groupedItems[groupKey] || []).map(x => {
                                         return (
                                           <Draggable key={x.ID} draggableID={x.ID}>
                                             {({ rootProps, draggableProps, snapshot }) => {
