@@ -64,10 +64,11 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
         },
       };
 
-      removeStyles(node, ['transition', 'transform']);
-
       map[direction]();
     }
+
+    // read first getBoundingClientRect, then change styles to improve performance
+    nodes.forEach(x => removeStyles(x, ['transition', 'transform']));
 
     resetState();
     onDragEnd({
@@ -401,6 +402,7 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
     fns.push(map[direction]);
   }
 
+  // read first getBoundingClientRect, then change styles to improve performance
   fns.forEach(fn => fn());
 
   onMarkNearestNode(nearestNode, nearestNodeRect, targetRect);
