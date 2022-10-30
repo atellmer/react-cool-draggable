@@ -13,7 +13,7 @@ const createItems = (count: number) =>
     }));
 
 const DndExampleApp: React.FC = () => {
-  const [items, setItems] = useState(createItems(20));
+  const [items, setItems] = useState(createItems(1000));
 
   const handleDragEnd = (options: OnDragEndOptions) => {
     const newItems = reorder({
@@ -29,7 +29,7 @@ const DndExampleApp: React.FC = () => {
   return (
     <Root>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableID='board' droppableGroupID='root' direction='horizontal'>
+        <Droppable direction='vertical' droppableID='board' droppableGroupID='root'>
           {({ snapshot, ...rest }) => {
             return (
               <DroppableContent isDragging={snapshot.isDragging} {...rest}>
@@ -68,14 +68,13 @@ const Root = styled.div`
 
 const DroppableContent = styled.div<SnapshotProps>`
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: column nowrap;
   border: 1px solid #2196f3;
   overflow-anchor: none;
   transition: background-color 0.6s ease-in-out;
   padding: 10px;
   background-color: #fff;
   min-height: 156px;
-  overflow-x: auto;
 
   ${p =>
     p.isDragging &&
@@ -118,9 +117,10 @@ const CardContentLayout = styled.div`
 `;
 
 const CardContent = styled.div`
-  height: 64px;
+  width: 100%;
+  height: 48px;
   background-color: pink;
-  padding: 20px;
+  padding: 10px;
 `;
 
 export { DndExampleApp };

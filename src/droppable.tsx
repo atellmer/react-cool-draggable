@@ -354,6 +354,7 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
   let nearestNode: HTMLElement = null;
   let nearestNodeRect: DOMRect = null;
   let minimalDiff = Infinity;
+  const fns: Array<() => void> = [];
 
   for (const node of nodes) {
     if (detectIsActiveDraggableNode(node, activeDraggableID)) continue;
@@ -397,8 +398,10 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
       },
     };
 
-    map[direction]();
+    fns.push(map[direction]);
   }
+
+  fns.forEach(fn => fn());
 
   onMarkNearestNode(nearestNode, nearestNodeRect, targetRect);
 };
