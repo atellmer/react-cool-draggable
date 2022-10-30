@@ -89,8 +89,8 @@ const TrelloApp: React.FC = () => {
   };
 
   const handleDragOver = ({ nearestNode, nearestNodeRect, targetRect }: OnDragOverOptions) => {
-    // Выделяем ближайшего соседа цветом, если перетаскиваемый объект отклонился более чем на половину от целевого объекта
-    // Может понадобится для перетаскивания элементов в дереве, чтобы дать пользователю понять вставится элемент как соседний или как потомок
+    // Highlight the nearest neighbor with a color if the dragged object deviated more than half from the target object.
+    // May be needed to drag and drop elements in the tree to let the user know if the element will be inserted as a neighbor or as a child.
 
     if (prevNearestNode.current && prevNearestNode.current !== nearestNode) {
       const node: HTMLElement = prevNearestNode.current.querySelector('[data-card]');

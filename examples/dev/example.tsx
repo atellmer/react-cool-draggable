@@ -29,7 +29,7 @@ const DndExampleApp: React.FC = () => {
   return (
     <Root>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableID='board' droppableGroupID='board' direction='horizontal'>
+        <Droppable droppableID='board' droppableGroupID='root' direction='horizontal'>
           {({ snapshot, ...rest }) => {
             return (
               <DroppableContent isDragging={snapshot.isDragging} {...rest}>
