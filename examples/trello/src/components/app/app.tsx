@@ -27,7 +27,7 @@ const createItems = (count: number, groupID: string) =>
 
 const TrelloApp: React.FC = () => {
   const [columns, setColumns] = useState(['column-1', 'column-2', 'column-3', 'column-4']);
-  const [items, setItems] = useState([...flatten(columns.map(x => createItems(5, x)))]);
+  const [items, setItems] = useState([...flatten(columns.map(x => createItems(10, x)))]);
   const groupedItems = groupBy(items, x => x.groupID);
 
   const handleDragEnd = (options: OnDragEndOptions) => {
@@ -96,7 +96,7 @@ const TrelloApp: React.FC = () => {
                                     <DraggableColumnHeader
                                       isDragging={columnsSnapshot.isDragging}
                                       {...columnsDraggableProps}>
-                                      {groupKey}
+                                      {groupKey} (draggable too)
                                     </DraggableColumnHeader>
                                     <DroppableContent isDragging={snapshot.isDragging} {...rest}>
                                       {(groupedItems[groupKey] || []).map(x => {

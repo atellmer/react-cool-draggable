@@ -41,7 +41,7 @@ function detectIsActiveDraggableNode(node: HTMLElement, activeDraggableID: ID) {
   return node.getAttribute(DRAGGABLE_ID_ATTR) === `${activeDraggableID}`;
 }
 
-function getActiveDraggableNode(contextID: number, activeDraggableID: ID) {
+function getActiveDraggableNode(contextID: number, activeDraggableID: ID): HTMLElement {
   return document.querySelector(`[${CONTEXT_ID_ATTR}="${contextID}"][${DRAGGABLE_ID_ATTR}="${activeDraggableID}"]`);
 }
 
@@ -128,16 +128,8 @@ function createBooleanMap<T = any>(items: Array<T> = [], getID: (item: T) => num
   return items.reduce((acc, x) => ((acc[getID(x)] = true), acc), {});
 }
 
-function debounce<T extends (...args) => void>(fn: T, timeout = 0): T {
-  let timerID = null;
-  const debounced: any = (...args) => {
-    timerID && clearTimeout(timerID);
-    timerID = setTimeout(() => {
-      fn(...args);
-    }, timeout);
-  };
-
-  return debounced;
+function getClosestDroppableNode(node: HTMLElement): HTMLElement {
+  return node.parentElement.closest(`[${DROPPABLE_ID_ATTR}]`);
 }
 
 export {
@@ -155,5 +147,5 @@ export {
   getThreshold,
   blockScroll,
   createBooleanMap,
-  debounce,
+  getClosestDroppableNode,
 };

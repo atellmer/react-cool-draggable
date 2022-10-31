@@ -16,10 +16,12 @@ const DragDropContext: React.FC<DragDropContextProps> = props => {
     state.unsubscribers.forEach(fn => fn());
     mergeState({
       isDragging: false,
+      isDropping: false,
       activeDroppableID: null,
       activeDraggableID: null,
       nodeWidth: null,
       nodeHeight: null,
+      timestamp: 0,
       scrollContainer: null,
       unsubscribers: [],
       onInsertPlaceholder: null,
@@ -48,12 +50,14 @@ export type DragDropContextValue = {
 
 type ContextState = {
   isDragging: boolean;
+  isDropping: boolean;
   contextID: number;
   activeDroppableID: ID;
   activeDroppableGroupID: ID;
   activeDraggableID: ID;
   nodeWidth: number;
   nodeHeight: number;
+  timestamp: number;
   scrollContainer: HTMLElement;
   unsubscribers: Array<() => void>;
   onInsertPlaceholder: () => void;
@@ -63,12 +67,14 @@ const Context = createContext<DragDropContextValue>(null);
 
 const inititalState: ContextState = {
   isDragging: false,
+  isDropping: false,
   contextID: null,
   activeDroppableID: null,
   activeDroppableGroupID: null,
   activeDraggableID: null,
   nodeWidth: null,
   nodeHeight: null,
+  timestamp: 0,
   scrollContainer: null,
   unsubscribers: [],
   onInsertPlaceholder: null,

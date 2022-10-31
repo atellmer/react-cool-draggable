@@ -24,12 +24,13 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
   const { draggableID, children } = props;
   const { state, mergeState } = useDragDropContext();
   const { droppableID, droppableGroupID, direction } = useDroppableContext();
-  const { contextID, scrollContainer } = state;
+  const { contextID, isDropping, scrollContainer } = state;
   const rootRef = useRef<HTMLDivElement>(null);
   const isActive = state.isDragging && state.activeDraggableID === draggableID;
-  const scope = useMemo<DraggableScope>(() => ({ unsubscribers: [], scrollContainer: null }), []);
+  const scope = useMemo<DraggableScope>(() => ({ unsubscribers: [], scrollContainer: null, isDropping }), []);
 
   scope.scrollContainer = scrollContainer;
+  scope.isDropping = isDropping;
 
   useLayoutEffect(() => () => unsubscribe(), []);
 
@@ -49,6 +50,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
     };
 
     const handleEvent = (moveEvent: MouseEvent) => {
+      if (scope.isDropping) return;
       const movePointer: Pointer = {
         clientX: moveEvent.clientX,
         clientY: moveEvent.clientY,
@@ -93,6 +95,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
       activeDraggableID: draggableID,
       nodeWidth,
       nodeHeight,
+      timestamp: Date.now(),
       scrollContainer,
       unsubscribers: [...state.unsubscribers, unsubscribe],
       onInsertPlaceholder: handleInsertPlaceholder,
@@ -114,6 +117,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
     const unblockScroll = blockScroll(document.body);
 
     const handleEvent = (moveEvent: TouchEvent) => {
+      if (scope.isDropping) return;
       const movePointer: Pointer = {
         clientX: moveEvent.touches[0].clientX,
         clientY: moveEvent.touches[0].clientY,
@@ -170,6 +174,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
       activeDraggableID: draggableID,
       nodeWidth,
       nodeHeight,
+      timestamp: Date.now(),
       scrollContainer,
       unsubscribers: [...state.unsubscribers, unsubscribe],
       onInsertPlaceholder: handleInsertPlaceholder,
@@ -218,6 +223,7 @@ type DraggableChildrenOptions = {
 type DraggableScope = {
   unsubscribers: Array<() => void>;
   scrollContainer: HTMLElement;
+  isDropping: boolean;
 };
 
 type ApplyMoveSensorOptions = {
@@ -289,12 +295,12 @@ function setNodeDragStyles(node: HTMLElement, rect: DOMRect) {
     width: `${rect.width}px`,
     height: `${rect.height}px`,
     transformOrigin: '0 0',
+    transition: 'none',
   });
 }
 
 function transformNodePosition(node: HTMLElement, { x, y }: Coordinates) {
   setStyles(node, {
-    transition: 'none',
     transform: `translate3D(${x}px, ${y}px, 0px)`,
   });
 }
