@@ -24,22 +24,18 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
   const { draggableID, children } = props;
   const { state, mergeState } = useDragDropContext();
   const { droppableID, droppableGroupID, direction } = useDroppableContext();
-  const { contextID, isDropping, scrollContainer } = state;
+  const { contextID, scrollContainer } = state;
   const rootRef = useRef<HTMLDivElement>(null);
   const isActive = state.isDragging && state.activeDraggableID === draggableID;
-  const scope = useMemo<DraggableScope>(() => ({ unsubscribers: [], scrollContainer: null, isDropping }), []);
+  const scope = useMemo<DraggableScope>(() => ({ removeSensor: null, scrollContainer: null }), []);
 
   scope.scrollContainer = scrollContainer;
-  scope.isDropping = isDropping;
 
-  useLayoutEffect(() => () => unsubscribe(), []);
-
-  const unsubscribe = () => {
-    scope.unsubscribers.forEach(fn => fn());
-    scope.unsubscribers = [];
-  };
+  useLayoutEffect(() => () => scope.removeSensor && scope.removeSensor(), []);
 
   const handleMouseDown = (startEvent: React.MouseEvent) => {
+    if (startEvent.buttons !== 1 || state.onComplete) return;
+
     const node = rootRef.current;
     const rect = node.getBoundingClientRect();
     const scrollContainer = getScrollContainer(node);
@@ -49,8 +45,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
       clientY: startEvent.clientY,
     };
 
-    const handleEvent = (moveEvent: MouseEvent) => {
-      if (scope.isDropping) return;
+    const handleMoveEvent = (moveEvent: MouseEvent) => {
       const movePointer: Pointer = {
         clientX: moveEvent.clientX,
         clientY: moveEvent.clientY,
@@ -64,14 +59,11 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
       });
     };
 
-    const resetEventHandler = () => {
-      document.removeEventListener('mousemove', handleEvent);
+    const removeSensor = () => {
+      document.removeEventListener('mousemove', handleMoveEvent);
     };
 
-    const unsubscribe = () => {
-      removeNodeStyles(node);
-      resetEventHandler();
-    };
+    const handleComplete = () => removeNodeStyles(node);
 
     const handleInsertPlaceholder = () => {
       transformNodesByTarget({
@@ -87,7 +79,6 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
     };
 
     setNodeDragStyles(node, rect);
-
     mergeState({
       isDragging: true,
       activeDroppableID: droppableID,
@@ -95,17 +86,22 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
       activeDraggableID: draggableID,
       nodeWidth,
       nodeHeight,
-      timestamp: Date.now(),
       scrollContainer,
-      unsubscribers: [...state.unsubscribers, unsubscribe],
+      unsubscribers: [removeSensor],
+      onComplete: handleComplete,
       onInsertPlaceholder: handleInsertPlaceholder,
     });
 
-    scope.unsubscribers.push(resetEventHandler);
-    document.addEventListener('mousemove', handleEvent);
+    scope.removeSensor = () => {
+      removeSensor();
+      scope.removeSensor = null;
+    };
+    document.addEventListener('mousemove', handleMoveEvent);
   };
 
   const handleTouchStart = (startEvent: React.TouchEvent) => {
+    if (state.onComplete) return;
+
     const node = rootRef.current;
     const rect = node.getBoundingClientRect();
     const scrollContainer = getScrollContainer(node);
@@ -117,7 +113,6 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
     const unblockScroll = blockScroll(document.body);
 
     const handleEvent = (moveEvent: TouchEvent) => {
-      if (scope.isDropping) return;
       const movePointer: Pointer = {
         clientX: moveEvent.touches[0].clientX,
         clientY: moveEvent.touches[0].clientY,
@@ -131,14 +126,13 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
       });
     };
 
-    const resetEventHandler = () => {
+    const removeSensor = () => {
       document.removeEventListener('touchmove', handleEvent);
-      unblockScroll();
     };
 
-    const unsubscribe = () => {
+    const handleComplete = () => {
       removeNodeStyles(node);
-      resetEventHandler();
+      unblockScroll();
     };
 
     const handleInsertPlaceholder = () => {
@@ -174,14 +168,16 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
       activeDraggableID: draggableID,
       nodeWidth,
       nodeHeight,
-      timestamp: Date.now(),
       scrollContainer,
-      unsubscribers: [...state.unsubscribers, unsubscribe],
+      unsubscribers: [removeSensor],
+      onComplete: handleComplete,
       onInsertPlaceholder: handleInsertPlaceholder,
     });
 
-    scope.unsubscribers.push(resetEventHandler);
-
+    scope.removeSensor = () => {
+      removeSensor();
+      scope.removeSensor = null;
+    };
     document.addEventListener('touchmove', handleEvent);
   };
 
@@ -221,9 +217,8 @@ type DraggableChildrenOptions = {
 };
 
 type DraggableScope = {
-  unsubscribers: Array<() => void>;
+  removeSensor: () => void;
   scrollContainer: HTMLElement;
-  isDropping: boolean;
 };
 
 type ApplyMoveSensorOptions = {

@@ -1,4 +1,4 @@
-import { ID, Pointer } from './types';
+import type { ID, Pointer } from './types';
 
 const CONTEXT_ID_ATTR = 'data-dnd-context-id';
 const DROPPABLE_ID_ATTR = 'data-dnd-droppable-id';

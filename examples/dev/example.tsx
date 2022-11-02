@@ -13,7 +13,7 @@ const createItems = (count: number) =>
     }));
 
 const DndExampleApp: React.FC = () => {
-  const [items, setItems] = useState(createItems(10));
+  const [items, setItems] = useState(createItems(100));
 
   const handleDragEnd = (options: OnDragEndOptions) => {
     const newItems = reorder({
@@ -29,7 +29,7 @@ const DndExampleApp: React.FC = () => {
   return (
     <Root>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable direction='vertical' droppableID='board' droppableGroupID='root' transitionTimeout={200}>
+        <Droppable direction='vertical' droppableID='board' droppableGroupID='root' transitionTimeout={1000}>
           {({ snapshot, ...rest }) => {
             return (
               <DroppableContent isDragging={snapshot.isDragging} {...rest}>
@@ -75,6 +75,7 @@ const DroppableContent = styled.div<SnapshotProps>`
   padding: 10px;
   background-color: #fff;
   min-height: 156px;
+  //overflow-x: auto;
 
   ${p =>
     p.isDragging &&
