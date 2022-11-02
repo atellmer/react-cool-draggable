@@ -9,9 +9,9 @@ import {
   getItemNodes,
   detectIsActiveDraggableNode,
   getActiveDraggableNode,
+  getActiveDroppableNode,
   getScrollContainerFromContainer,
   getThreshold,
-  getClosestDroppableNode,
 } from './utils';
 import type { ID, Direction, Pointer } from './types';
 
@@ -145,6 +145,7 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
     isDragging,
     contextID,
     activeDraggableID,
+    activeDroppableID,
     nearestNodeRef,
     transitionTimeout,
     unsubscribers,
@@ -351,6 +352,7 @@ type UseMoveEndSensorEffectOptions = {
   isDragging: boolean;
   contextID: number;
   activeDraggableID: ID;
+  activeDroppableID: ID;
   nearestNodeRef: React.MutableRefObject<HTMLElement>;
   transitionTimeout: number;
   unsubscribers: Array<() => void>;
@@ -363,6 +365,7 @@ function useMoveEndSensorEffect(options: UseMoveEndSensorEffectOptions) {
     isDragging,
     contextID,
     activeDraggableID,
+    activeDroppableID,
     nearestNodeRef,
     transitionTimeout,
     unsubscribers,
@@ -384,6 +387,8 @@ function useMoveEndSensorEffect(options: UseMoveEndSensorEffectOptions) {
 
         applyTargetNodeTransition({
           direction,
+          contextID,
+          activeDroppableID,
           targetNode,
           nearestNode,
           transitionTimeout,
@@ -421,6 +426,8 @@ function useMoveEndSensorEffect(options: UseMoveEndSensorEffectOptions) {
 
 type ApplyTargetNodeTransitionOptions = {
   direction: Direction;
+  contextID: number;
+  activeDroppableID: ID;
   targetNode: HTMLElement;
   nearestNode: HTMLElement | null;
   transitionTimeout: number;
@@ -428,19 +435,23 @@ type ApplyTargetNodeTransitionOptions = {
 };
 
 const applyTargetNodeTransition = (options: ApplyTargetNodeTransitionOptions) => {
-  const { direction, targetNode, nearestNode, transitionTimeout, onComplete } = options;
+  const { direction, contextID, activeDroppableID, targetNode, nearestNode, transitionTimeout, onComplete } = options;
   const targetNodeStyle = window.getComputedStyle(targetNode);
   const hasTransform = targetNodeStyle.transform !== 'none';
   const isVertical = direction === 'vertical';
+  const { droppableTop, droppableLeft } = getDroppableContainerOffsets();
 
-  const getDroppableContainerOffset = () => {
-    const droppableNode = getClosestDroppableNode(targetNode);
-    const { top } = droppableNode.getBoundingClientRect();
-    const paddingTop = parseInt(window.getComputedStyle(droppableNode).paddingTop, 10);
-    const offset = top + paddingTop;
+  function getDroppableContainerOffsets() {
+    const droppableNode = getActiveDroppableNode(contextID, activeDroppableID);
+    const { top, left } = droppableNode.getBoundingClientRect();
+    const style = window.getComputedStyle(droppableNode);
+    const paddingTop = parseInt(style.paddingTop, 10);
+    const paddingLeft = parseInt(style.paddingLeft, 10);
+    const droppableTop = top + paddingTop;
+    const droppableLeft = left + paddingLeft;
 
-    return offset;
-  };
+    return { droppableTop, droppableLeft };
+  }
 
   const getVerticalDirectionOffset = () => {
     if (nearestNode) {
@@ -450,7 +461,7 @@ const applyTargetNodeTransition = (options: ApplyTargetNodeTransitionOptions) =>
       return bottom + marginTop;
     }
 
-    return getDroppableContainerOffset();
+    return droppableTop;
   };
 
   const getHorizontalDirectionOffset = () => {
@@ -461,24 +472,24 @@ const applyTargetNodeTransition = (options: ApplyTargetNodeTransitionOptions) =>
       return left + width + marginLeft;
     }
 
-    return getDroppableContainerOffset();
+    return droppableTop;
   };
 
   const offset = isVertical ? getVerticalDirectionOffset() : getHorizontalDirectionOffset();
 
   if (hasTransform) {
     const styles = {
-      transition: `transform ${transitionTimeout}ms ease-in-out, `,
+      transition: `transform ${transitionTimeout}ms ease-in-out, top ${transitionTimeout}ms ease-in-out, left ${transitionTimeout}ms ease-in-out`,
       transform: `translate3D(0, 0, 0)`,
       top: undefined,
       left: undefined,
     };
 
     if (isVertical) {
-      styles.transition += `top ${transitionTimeout}ms ease-in-out`;
       styles.top = `${offset}px`;
+      styles.left = `${droppableLeft}px`;
     } else {
-      styles.transition += `left ${transitionTimeout}ms ease-in-out`;
+      styles.top = `${droppableTop}px`;
       styles.left = `${offset}px`;
     }
 
