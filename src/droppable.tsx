@@ -452,14 +452,9 @@ function useMoveEndSensorEffect(options: UseMoveEndSensorEffectOptions) {
       };
 
       if (nearestNode && hasTransform) {
-        const handleTransitionEnd = (e: globalThis.TransitionEvent) => {
-          if (e.target === nearestNode && e.propertyName === 'transform') {
-            nearestNode.removeEventListener('transitionend', handleTransitionEnd);
-            applyTransition();
-          }
-        };
-
-        nearestNode.addEventListener('transitionend', handleTransitionEnd);
+        setTimeout(() => {
+          applyTransition();
+        }, transitionTimeout);
       } else {
         applyTransition();
       }
