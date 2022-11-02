@@ -97,9 +97,9 @@ const CardContentLayout = styled.div`
 `;
 
 const CardContent = styled.div`
-  height: 64px;
+  height: 48px;
   background-color: pink;
-  padding: 20px;
+  padding: 10px;
 `;
 
 export {

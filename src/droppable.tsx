@@ -290,6 +290,8 @@ function usePlaceholderEffect(options: UsePlaceholderEffectOptions) {
       container.appendChild(placeholder);
       onInsertPlaceholder();
     }
+
+    return () => scope.removePlaceholder();
   }, [isDragging]);
 }
 
