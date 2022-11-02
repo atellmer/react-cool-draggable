@@ -20,12 +20,13 @@ export type DroppableProps = {
   droppableID: ID;
   droppableGroupID: ID;
   transitionTimeout?: number;
+  transitionTimingFn?: string;
   children: (options: DroppableChildrenOptions) => React.ReactElement;
   onDragOver?: (options: OnDragOverOptions) => void;
 };
 
 const Droppable: React.FC<DroppableProps> = memo(props => {
-  const { droppableID, droppableGroupID, direction, transitionTimeout, children, onDragOver } = props;
+  const { droppableID, droppableGroupID, direction, transitionTimeout, transitionTimingFn, children, onDragOver } = props;
   const { state, mergeState, resetState, onDragEnd } = useDragDropContext();
   const {
     isDragging: isSomeDragging,
@@ -133,6 +134,7 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
       nodeHeight,
       nodeWidth,
       transitionTimeout,
+      transitionTimingFn,
       onMarkNearestNode: (nearestNode, targetNode) => {
         nearestNodeRef.current = nearestNode || null;
         onDragOver({ nearestNode, targetNode });
@@ -511,7 +513,8 @@ type TransformNodesByTargetOptions = {
   activeDraggableID: ID;
   nodeHeight: number;
   nodeWidth: number;
-  transitionTimeout: number;
+  transitionTimeout?: number;
+  transitionTimingFn?: string;
   onMarkNearestNode?: (nearestNode: HTMLElement, targetNode: HTMLElement) => void;
 };
 
@@ -524,7 +527,8 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
     activeDraggableID,
     nodeHeight,
     nodeWidth,
-    transitionTimeout,
+    transitionTimeout = 0,
+    transitionTimingFn = 'ease-in-out',
     onMarkNearestNode = () => {},
   } = options;
   const targetRect = target.getBoundingClientRect();
@@ -541,7 +545,7 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
       vertical: () => {
         if (thresholdY <= rect.top) {
           setStyles(node, {
-            transition: `transform ${transitionTimeout}ms ease-in-out`,
+            transition: `transform ${transitionTimeout}ms ${transitionTimingFn}`,
             transform: `translate3d(0px, ${nodeHeight}px, 0px)`,
           });
         } else {
@@ -558,7 +562,7 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
       horizontal: () => {
         if (thresholdX <= rect.left) {
           setStyles(node, {
-            transition: `transform ${transitionTimeout}ms ease-in-out`,
+            transition: `transform ${transitionTimeout}ms ${transitionTimingFn}`,
             transform: `translate3d(${nodeWidth}px, 0px, 0px)`,
           });
         } else {

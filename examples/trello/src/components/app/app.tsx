@@ -93,7 +93,8 @@ const TrelloApp: React.FC = () => {
                               droppableID={groupKey}
                               droppableGroupID='columns'
                               direction='vertical'
-                              transitionTimeout={1000}>
+                              transitionTimeout={200}
+                              transitionTimingFn='cubic-bezier(.17,.67,.83,.67)'>
                               {({ snapshot, ...rest }) => {
                                 return (
                                   <>
@@ -109,7 +110,7 @@ const TrelloApp: React.FC = () => {
                                             {({ rootProps, draggableProps, snapshot }) => {
                                               return (
                                                 <DraggableContent isDragging={snapshot.isDragging} {...rootProps}>
-                                                  <CardContentLayout data-card>
+                                                  <CardContentLayout>
                                                     <DraggableHeader
                                                       isDragging={snapshot.isDragging}
                                                       {...draggableProps}

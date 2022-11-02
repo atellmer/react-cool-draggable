@@ -72,7 +72,6 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
         nodeHeight,
         pointer: startPointer,
         activeDraggableID: draggableID,
-        transitionTimeout: 0,
         direction,
         nodes: getItemNodes(contextID, droppableID),
       });
@@ -138,12 +137,11 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
     const handleInsertPlaceholder = () => {
       transformNodesByTarget({
         target: node,
+        direction,
         nodeWidth,
         nodeHeight,
         pointer: startPointer,
         activeDraggableID: draggableID,
-        transitionTimeout: 0,
-        direction,
         nodes: getItemNodes(contextID, droppableID),
       });
     };
@@ -152,12 +150,11 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
 
     transformNodesByTarget({
       target: node,
+      direction,
       nodeWidth,
       nodeHeight,
       pointer: startPointer,
       activeDraggableID: draggableID,
-      transitionTimeout: 0,
-      direction,
       nodes: getItemNodes(contextID, droppableID),
     });
 
