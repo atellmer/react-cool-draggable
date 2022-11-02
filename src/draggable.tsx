@@ -36,10 +36,10 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
   const handleMouseDown = (startEvent: React.MouseEvent) => {
     if (disabled || startEvent.buttons !== 1 || state.onComplete) return;
 
-    const node = rootRef.current;
-    const rect = node.getBoundingClientRect();
-    const scrollContainer = getScrollContainer(node);
-    const { nodeWidth, nodeHeight } = getNodeSize(node, rect);
+    const targetNode = rootRef.current;
+    const rect = targetNode.getBoundingClientRect();
+    const scrollContainer = getScrollContainer(targetNode);
+    const { nodeWidth, nodeHeight } = getNodeSize(targetNode, rect);
     const startPointer: Pointer = {
       clientX: startEvent.clientX,
       clientY: startEvent.clientY,
@@ -52,7 +52,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
       };
 
       applyMoveSensor({
-        node,
+        node: targetNode,
         scrollContainer: scope.scrollContainer,
         startPointer,
         movePointer,
@@ -63,11 +63,11 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
       document.removeEventListener('mousemove', handleMoveEvent);
     };
 
-    const handleComplete = () => removeNodeStyles(node);
+    const handleComplete = () => removeNodeStyles(targetNode);
 
     const handleInsertPlaceholder = () => {
       transformNodesByTarget({
-        target: node,
+        targetNode,
         nodeWidth,
         nodeHeight,
         pointer: startPointer,
@@ -77,7 +77,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
       });
     };
 
-    setNodeDragStyles(node, rect);
+    setNodeDragStyles(targetNode, rect);
     mergeState({
       isDragging: true,
       activeDroppableID: droppableID,
@@ -101,10 +101,10 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
   const handleTouchStart = (startEvent: React.TouchEvent) => {
     if (disabled || state.onComplete) return;
 
-    const node = rootRef.current;
-    const rect = node.getBoundingClientRect();
-    const scrollContainer = getScrollContainer(node);
-    const { nodeWidth, nodeHeight } = getNodeSize(node, rect);
+    const targetNode = rootRef.current;
+    const rect = targetNode.getBoundingClientRect();
+    const scrollContainer = getScrollContainer(targetNode);
+    const { nodeWidth, nodeHeight } = getNodeSize(targetNode, rect);
     const startPointer: Pointer = {
       clientX: startEvent.touches[0].clientX,
       clientY: startEvent.touches[0].clientY,
@@ -118,7 +118,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
       };
 
       applyMoveSensor({
-        node,
+        node: targetNode,
         scrollContainer: scope.scrollContainer,
         startPointer,
         movePointer,
@@ -130,13 +130,13 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
     };
 
     const handleComplete = () => {
-      removeNodeStyles(node);
+      removeNodeStyles(targetNode);
       unblockScroll();
     };
 
     const handleInsertPlaceholder = () => {
       transformNodesByTarget({
-        target: node,
+        targetNode,
         direction,
         nodeWidth,
         nodeHeight,
@@ -146,10 +146,10 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
       });
     };
 
-    setNodeDragStyles(node, rect);
+    setNodeDragStyles(targetNode, rect);
 
     transformNodesByTarget({
-      target: node,
+      targetNode,
       direction,
       nodeWidth,
       nodeHeight,

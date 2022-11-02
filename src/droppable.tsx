@@ -240,10 +240,9 @@ type UseIntersectionEffectOptions = {
   contextID: number;
   activeDroppableID: ID;
   activeDraggableID: ID;
-  debounceTimeout: number;
   unsubscribers: Array<() => void>;
   onIntersect: () => void;
-};
+} & Required<Pick<DroppableProps, 'debounceTimeout'>>;
 
 function useIntersectionEffect(options: UseIntersectionEffectOptions) {
   const {
@@ -254,7 +253,7 @@ function useIntersectionEffect(options: UseIntersectionEffectOptions) {
     contextID,
     activeDroppableID,
     activeDraggableID,
-    debounceTimeout = 0,
+    debounceTimeout,
     unsubscribers,
     onIntersect,
   } = options;
@@ -294,7 +293,7 @@ function useIntersectionEffect(options: UseIntersectionEffectOptions) {
 
     unsubscribers.push(unsubscribe);
 
-    return () => unsubscribe();
+    return () => performUnsubscribers(unsubscribe, unsubscribers);
   }, [isSomeDragging, activeDroppableID, rootNode]);
 }
 
@@ -338,17 +337,20 @@ function usePlaceholderEffect(options: UsePlaceholderEffectOptions) {
 type UseMoveSensorEffectOptions = {
   isDragging: boolean;
   unsubscribers: Array<() => void>;
-  transformNodesByTargetOptions: Omit<TransformNodesByTargetOptions, 'target' | 'pointer'>;
+  transformNodesByTargetOptions: Omit<TransformNodesByTargetOptions, 'targetNode' | 'pointer'>;
 };
 
 function useMoveSensorEffect(options: UseMoveSensorEffectOptions) {
   const { isDragging, unsubscribers, transformNodesByTargetOptions } = options;
+  const scope = useMemo(() => ({ options: null }), []);
+
+  scope.options = transformNodesByTargetOptions;
 
   useLayoutEffect(() => {
     if (!isDragging) return;
 
     const handleEvent = debounce((e: MouseEvent | TouchEvent) => {
-      const target = e.target as HTMLElement;
+      const targetNode = e.target as HTMLElement;
       const pointer: Pointer =
         e instanceof MouseEvent
           ? { clientX: e.clientX, clientY: e.clientY }
@@ -357,8 +359,8 @@ function useMoveSensorEffect(options: UseMoveSensorEffectOptions) {
           : null;
 
       transformNodesByTarget({
-        ...transformNodesByTargetOptions,
-        target,
+        ...scope.options,
+        targetNode,
         pointer,
       });
     });
@@ -373,7 +375,7 @@ function useMoveSensorEffect(options: UseMoveSensorEffectOptions) {
 
     unsubscribers.push(unsubscribe);
 
-    return () => unsubscribe();
+    return () => performUnsubscribers(unsubscribe, unsubscribers);
   }, [isDragging]);
 }
 
@@ -384,10 +386,9 @@ type UseMoveEndSensorEffectOptions = {
   activeDraggableID: ID;
   activeDroppableID: ID;
   nearestNodeRef: React.MutableRefObject<HTMLElement>;
-  transitionTimeout: number;
   unsubscribers: Array<() => void>;
   onDragEnd: (node: HTMLElement) => void;
-};
+} & Required<Pick<DroppableProps, 'transitionTimeout'>>;
 
 function useMoveEndSensorEffect(options: UseMoveEndSensorEffectOptions) {
   const {
@@ -450,7 +451,7 @@ function useMoveEndSensorEffect(options: UseMoveEndSensorEffectOptions) {
 
     unsubscribers.push(unsubscribe);
 
-    return () => unsubscribe();
+    return () => performUnsubscribers(unsubscribe, unsubscribers);
   }, [isDragging]);
 }
 
@@ -460,9 +461,8 @@ type ApplyTargetNodeTransitionOptions = {
   activeDroppableID: ID;
   targetNode: HTMLElement;
   nearestNode: HTMLElement | null;
-  transitionTimeout: number;
   onComplete: (targetNode: HTMLElement) => void;
-};
+} & Required<Pick<DroppableProps, 'transitionTimeout'>>;
 
 const applyTargetNodeTransition = (options: ApplyTargetNodeTransitionOptions) => {
   const { direction, contextID, activeDroppableID, targetNode, nearestNode, transitionTimeout, onComplete } = options;
@@ -535,21 +535,19 @@ const applyTargetNodeTransition = (options: ApplyTargetNodeTransitionOptions) =>
 
 type TransformNodesByTargetOptions = {
   direction: Direction;
-  target: HTMLElement;
+  targetNode: HTMLElement;
   pointer: Pointer;
   nodes: Array<HTMLElement>;
   activeDraggableID: ID;
   nodeHeight: number;
   nodeWidth: number;
-  transitionTimeout?: number;
-  transitionTimingFn?: string;
   onMarkNearestNode?: (nearestNode: HTMLElement, targetNode: HTMLElement) => void;
-};
+} & Pick<DroppableProps, 'transitionTimeout' | 'transitionTimingFn'>;
 
 const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
   const {
     direction,
-    target,
+    targetNode,
     pointer,
     nodes,
     activeDraggableID,
@@ -559,7 +557,7 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
     transitionTimingFn = '',
     onMarkNearestNode = () => {},
   } = options;
-  const targetRect = target.getBoundingClientRect();
+  const targetRect = targetNode.getBoundingClientRect();
   let nearestNode: HTMLElement = null;
   let minimalDiff = Infinity;
   const fns: Array<() => void> = [];
@@ -572,7 +570,7 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
     const { thresholdY, thresholdX } = getThreshold(targetRect, pointer);
     const map: Record<Direction, () => void> = {
       vertical: () => {
-        if (thresholdY <= top) {
+        if (thresholdY <= top || thresholdY - top === 1) {
           setStyles(node, {
             transition: `transform ${transitionTimeout}ms ${transitionTimingFn}`,
             transform: `translate3d(0px, ${nodeHeight}px, 0px)`,
@@ -589,7 +587,7 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
         }
       },
       horizontal: () => {
-        if (thresholdX <= left) {
+        if (thresholdX <= left || thresholdX - left === 1) {
           setStyles(node, {
             transition: `transform ${transitionTimeout}ms ${transitionTimingFn}`,
             transform: `translate3d(${nodeWidth}px, 0px, 0px)`,
@@ -613,7 +611,16 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
   // read first getBoundingClientRect in loop, then change styles to improve performance
   fns.forEach(fn => fn());
 
-  onMarkNearestNode(nearestNode, target);
+  onMarkNearestNode(nearestNode, targetNode);
 };
+
+function performUnsubscribers(unsubscribe: () => void, unsubscribers: Array<() => void>) {
+  const idx = unsubscribers.findIndex(x => x === unsubscribe);
+
+  if (idx !== -1) {
+    unsubscribe();
+    unsubscribers.splice(idx, 1);
+  }
+}
 
 export { Droppable, useDroppableContext, transformNodesByTarget };
