@@ -87,6 +87,15 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
     });
   };
 
+  useEffect(() => {
+    if (isDragging) return;
+    setTimeout(() => {
+      nodes.forEach(x => {
+        removeStyles(x, ['transition', 'transform']);
+      });
+    });
+  }, [isDragging]);
+
   useIntersectionEffect({
     contextID,
     activeDraggableID,
