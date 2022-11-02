@@ -71,12 +71,12 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
       const rect = node.getBoundingClientRect();
       const map: Record<DroppableProps['direction'], () => void> = {
         vertical: () => {
-          if (targetRect.top + targetRect.height > rect.top + rect.height) {
+          if (safeNumber(targetRect.top + targetRect.height) > safeNumber(rect.top + rect.height)) {
             destinationIdx++;
           }
         },
         horizontal: () => {
-          if (targetRect.left + targetRect.width > rect.left + rect.width) {
+          if (safeNumber(targetRect.left + targetRect.width) > safeNumber(rect.left + rect.width)) {
             destinationIdx++;
           }
         },
@@ -123,11 +123,27 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
     debounceTimeout,
     rootNode: rootRef.current,
     unsubscribers,
-    onIntersect: () => {
+    onIntersect: (targetNode, pointer) => {
       mergeState({
         activeDroppableID: droppableID,
         scrollContainer: getScrollContainerFromContainer(rootRef.current),
-        onInsertPlaceholder: () => {},
+        onInsertPlaceholder: () => {
+          transformNodesByTarget({
+            direction,
+            targetNode,
+            nodeWidth,
+            nodeHeight,
+            pointer,
+            activeDraggableID,
+            transitionTimeout,
+            transitionTimingFn,
+            nodes: getItemNodes(contextID, droppableID),
+            onMarkNearestNode: (nearestNode, targetNode) => {
+              nearestNodeRef.current = nearestNode || null;
+              onDragOver({ nearestNode, targetNode });
+            },
+          });
+        },
       });
     },
   });
@@ -241,7 +257,7 @@ type UseIntersectionEffectOptions = {
   activeDroppableID: ID;
   activeDraggableID: ID;
   unsubscribers: Array<() => void>;
-  onIntersect: () => void;
+  onIntersect: (targetNode: HTMLElement, pointer: Pointer) => void;
 } & Required<Pick<DroppableProps, 'debounceTimeout'>>;
 
 function useIntersectionEffect(options: UseIntersectionEffectOptions) {
@@ -260,7 +276,7 @@ function useIntersectionEffect(options: UseIntersectionEffectOptions) {
 
   useEffect(() => {
     if (!isSomeDragging) return;
-    const handleEvent = debounce(() => {
+    const handleEvent = debounce((e: MouseEvent | TouchEvent) => {
       if (!isSomeDragging) return;
       if (!isActiveGroup) return;
       if (isActive) return;
@@ -279,7 +295,15 @@ function useIntersectionEffect(options: UseIntersectionEffectOptions) {
         draggableRectLeft > droppableRectLeft && draggableRectLeft < droppableRectLeft + droppableRectWidth;
 
       if (isYaxesIntersected && isXaxesIntersected) {
-        onIntersect();
+        const targetNode = e.target as HTMLElement;
+        const pointer: Pointer =
+          e instanceof MouseEvent
+            ? { clientX: e.clientX, clientY: e.clientY }
+            : e instanceof TouchEvent
+            ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }
+            : null;
+
+        onIntersect(targetNode, pointer);
       }
     }, debounceTimeout);
 
