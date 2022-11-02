@@ -21,12 +21,22 @@ export type DroppableProps = {
   droppableGroupID: ID;
   transitionTimeout?: number;
   transitionTimingFn?: string;
+  disabled?: boolean;
   children: (options: DroppableChildrenOptions) => React.ReactElement;
   onDragOver?: (options: OnDragOverOptions) => void;
 };
 
 const Droppable: React.FC<DroppableProps> = memo(props => {
-  const { droppableID, droppableGroupID, direction, transitionTimeout, transitionTimingFn, children, onDragOver } = props;
+  const {
+    droppableID,
+    droppableGroupID,
+    direction,
+    transitionTimeout,
+    transitionTimingFn,
+    disabled,
+    children,
+    onDragOver,
+  } = props;
   const { state, mergeState, resetState, onDragEnd } = useDragDropContext();
   const {
     isDragging: isSomeDragging,
@@ -39,7 +49,7 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
     unsubscribers,
     onInsertPlaceholder,
   } = state;
-  const isActiveGroup = droppableGroupID === activeDroppableGroupID;
+  const isActiveGroup = !disabled && droppableGroupID === activeDroppableGroupID;
   const isActive = isActiveGroup && droppableID === activeDroppableID;
   const isDragging = isSomeDragging && isActive;
   const rootRef = useRef<HTMLElement>(null);
@@ -159,8 +169,9 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
       direction,
       droppableID,
       droppableGroupID,
+      disabled,
     }),
-    [direction, droppableID, droppableGroupID],
+    [direction, droppableID, droppableGroupID, disabled],
   );
 
   return (
@@ -180,6 +191,7 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
 
 Droppable.defaultProps = {
   transitionTimeout: 200,
+  transitionTimingFn: 'ease-in-out',
   onDragOver: () => {},
 };
 
@@ -187,7 +199,7 @@ type DroppableScope = {
   removePlaceholder: () => void;
 };
 
-type DroppableContextValue = {} & Pick<DroppableProps, 'direction' | 'droppableID' | 'droppableGroupID'>;
+type DroppableContextValue = {} & Pick<DroppableProps, 'direction' | 'droppableID' | 'droppableGroupID' | 'disabled'>;
 
 const DroppableContext = createContext<DroppableContextValue>(null);
 
@@ -528,7 +540,7 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
     nodeHeight,
     nodeWidth,
     transitionTimeout = 0,
-    transitionTimingFn = 'ease-in-out',
+    transitionTimingFn = '',
     onMarkNearestNode = () => {},
   } = options;
   const targetRect = target.getBoundingClientRect();

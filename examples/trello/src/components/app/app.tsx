@@ -90,9 +90,9 @@ const TrelloApp: React.FC = () => {
                         return (
                           <Column {...columnsRootProps}>
                             <Droppable
+                              direction='vertical'
                               droppableID={groupKey}
                               droppableGroupID='columns'
-                              direction='vertical'
                               transitionTimeout={200}
                               transitionTimingFn='cubic-bezier(.17,.67,.83,.67)'>
                               {({ snapshot, ...rest }) => {

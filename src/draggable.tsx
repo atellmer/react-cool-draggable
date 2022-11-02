@@ -23,7 +23,7 @@ export type DraggableProps = {
 const Draggable: React.FC<DraggableProps> = memo(props => {
   const { draggableID, children } = props;
   const { state, mergeState } = useDragDropContext();
-  const { droppableID, droppableGroupID, direction } = useDroppableContext();
+  const { droppableID, droppableGroupID, direction, disabled } = useDroppableContext();
   const { contextID, scrollContainer } = state;
   const rootRef = useRef<HTMLDivElement>(null);
   const isActive = state.isDragging && state.activeDraggableID === draggableID;
@@ -34,7 +34,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
   useLayoutEffect(() => () => scope.removeSensor && scope.removeSensor(), []);
 
   const handleMouseDown = (startEvent: React.MouseEvent) => {
-    if (startEvent.buttons !== 1 || state.onComplete) return;
+    if (disabled || startEvent.buttons !== 1 || state.onComplete) return;
 
     const node = rootRef.current;
     const rect = node.getBoundingClientRect();
@@ -99,7 +99,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
   };
 
   const handleTouchStart = (startEvent: React.TouchEvent) => {
-    if (state.onComplete) return;
+    if (disabled || state.onComplete) return;
 
     const node = rootRef.current;
     const rect = node.getBoundingClientRect();
