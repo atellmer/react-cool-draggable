@@ -86,13 +86,17 @@ function getNodeSize(node: HTMLElement, rect: DOMRect) {
   const marginBottom = parseInt(style.marginBottom);
   const marginRight = parseInt(style.marginRight);
   const marginLeft = parseInt(style.marginLeft);
-  const nodeWidth = rect.width + marginLeft + marginRight;
-  const nodeHeight = rect.height + marginTop + marginBottom;
+  const nodeWidth = safeNumber(rect.width + marginLeft + marginRight);
+  const nodeHeight = safeNumber(rect.height + marginTop + marginBottom);
 
   return {
     nodeWidth,
     nodeHeight,
   };
+}
+
+function safeNumber(value: number, precision = 0) {
+  return Number(value.toFixed(precision));
 }
 
 function getThreshold(rect: DOMRect, pointer: Pointer) {
@@ -101,8 +105,8 @@ function getThreshold(rect: DOMRect, pointer: Pointer) {
   const thresholdX = left > 0 ? left : pointer.clientX < window.innerWidth / 2 ? 0 : window.innerWidth;
 
   return {
-    thresholdY,
-    thresholdX,
+    thresholdY: safeNumber(thresholdY),
+    thresholdX: safeNumber(thresholdX),
   };
 }
 
@@ -132,6 +136,18 @@ function createBooleanMap<T = any>(items: Array<T> = [], getID: (item: T) => num
   return items.reduce((acc, x) => ((acc[getID(x)] = true), acc), {});
 }
 
+function debounce<T extends (...args) => void>(fn: T, timeout = 0): T {
+  let timerID = null;
+  const debounced: any = (...args) => {
+    timerID && clearTimeout(timerID);
+    timerID = setTimeout(() => {
+      fn(...args);
+    }, timeout);
+  };
+
+  return debounced;
+}
+
 export {
   CONTEXT_ID_ATTR,
   DROPPABLE_ID_ATTR,
@@ -145,7 +161,9 @@ export {
   getScrollContainer,
   getScrollContainerFromContainer,
   getNodeSize,
+  safeNumber,
   getThreshold,
   blockScroll,
   createBooleanMap,
+  debounce,
 };

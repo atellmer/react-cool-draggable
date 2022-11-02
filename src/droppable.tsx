@@ -11,7 +11,9 @@ import {
   getActiveDraggableNode,
   getActiveDroppableNode,
   getScrollContainerFromContainer,
+  safeNumber,
   getThreshold,
+  debounce,
 } from './utils';
 import type { ID, Direction, Pointer } from './types';
 
@@ -22,6 +24,7 @@ export type DroppableProps = {
   transitionTimeout?: number;
   transitionTimingFn?: string;
   disabled?: boolean;
+  debounceTimeout?: number;
   children: (options: DroppableChildrenOptions) => React.ReactElement;
   onDragOver?: (options: OnDragOverOptions) => void;
 };
@@ -33,6 +36,7 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
     direction,
     transitionTimeout,
     transitionTimingFn,
+    debounceTimeout,
     disabled,
     children,
     onDragOver,
@@ -102,7 +106,9 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
     if (isDragging) return;
     setTimeout(() => {
       nodes.forEach(x => {
-        removeStyles(x, ['transition', 'transform']);
+        const isActive = detectIsActiveDraggableNode(x, activeDraggableID);
+
+        !isActive && removeStyles(x, ['transition', 'transform']);
       });
     });
   }, [isDragging]);
@@ -114,6 +120,7 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
     isActiveGroup,
     isActive,
     isSomeDragging,
+    debounceTimeout,
     rootNode: rootRef.current,
     unsubscribers,
     onIntersect: () => {
@@ -192,6 +199,7 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
 Droppable.defaultProps = {
   transitionTimeout: 200,
   transitionTimingFn: 'ease-in-out',
+  debounceTimeout: 0,
   onDragOver: () => {},
 };
 
@@ -232,6 +240,7 @@ type UseIntersectionEffectOptions = {
   contextID: number;
   activeDroppableID: ID;
   activeDraggableID: ID;
+  debounceTimeout: number;
   unsubscribers: Array<() => void>;
   onIntersect: () => void;
 };
@@ -245,28 +254,35 @@ function useIntersectionEffect(options: UseIntersectionEffectOptions) {
     contextID,
     activeDroppableID,
     activeDraggableID,
+    debounceTimeout = 0,
     unsubscribers,
     onIntersect,
   } = options;
 
   useEffect(() => {
     if (!isSomeDragging) return;
-
-    const handleEvent = () => {
+    const handleEvent = debounce(() => {
       if (!isSomeDragging) return;
       if (!isActiveGroup) return;
       if (isActive) return;
+      const draggableNode = getActiveDraggableNode(contextID, activeDraggableID);
       const droppableRect = rootNode.getBoundingClientRect();
-      const draggingRect = getActiveDraggableNode(contextID, activeDraggableID).getBoundingClientRect();
+      const draggableRect = draggableNode.getBoundingClientRect();
+      const draggableRectTop = safeNumber(draggableRect.top);
+      const draggableRectLeft = safeNumber(draggableRect.left);
+      const droppableRectTop = safeNumber(droppableRect.top);
+      const droppableRectLeft = safeNumber(droppableRect.left);
+      const droppableRectHeight = safeNumber(droppableRect.height);
+      const droppableRectWidth = safeNumber(droppableRect.width);
       const isYaxesIntersected =
-        draggingRect.top > droppableRect.top && draggingRect.top < droppableRect.top + droppableRect.height;
+        draggableRectTop > droppableRectTop && draggableRectTop < droppableRectTop + droppableRectHeight;
       const isXaxesIntersected =
-        draggingRect.left > droppableRect.left && draggingRect.left < droppableRect.left + droppableRect.width;
+        draggableRectLeft > droppableRectLeft && draggableRectLeft < droppableRectLeft + droppableRectWidth;
 
       if (isYaxesIntersected && isXaxesIntersected) {
         onIntersect();
       }
-    };
+    }, debounceTimeout);
 
     document.addEventListener('mousemove', handleEvent);
     document.addEventListener('touchmove', handleEvent);
@@ -331,7 +347,7 @@ function useMoveSensorEffect(options: UseMoveSensorEffectOptions) {
   useLayoutEffect(() => {
     if (!isDragging) return;
 
-    const handleEvent = (e: MouseEvent | TouchEvent) => {
+    const handleEvent = debounce((e: MouseEvent | TouchEvent) => {
       const target = e.target as HTMLElement;
       const pointer: Pointer =
         e instanceof MouseEvent
@@ -345,7 +361,7 @@ function useMoveSensorEffect(options: UseMoveSensorEffectOptions) {
         target,
         pointer,
       });
-    };
+    });
 
     document.addEventListener('mousemove', handleEvent);
     document.addEventListener('touchmove', handleEvent);
@@ -461,8 +477,8 @@ const applyTargetNodeTransition = (options: ApplyTargetNodeTransitionOptions) =>
     const style = window.getComputedStyle(droppableNode);
     const paddingTop = parseInt(style.paddingTop, 10);
     const paddingLeft = parseInt(style.paddingLeft, 10);
-    const droppableTop = top + paddingTop;
-    const droppableLeft = left + paddingLeft;
+    const droppableTop = safeNumber(top + paddingTop);
+    const droppableLeft = safeNumber(left + paddingLeft);
 
     return { droppableTop, droppableLeft };
   }
@@ -472,7 +488,7 @@ const applyTargetNodeTransition = (options: ApplyTargetNodeTransitionOptions) =>
       const { bottom } = nearestNode.getBoundingClientRect();
       const marginTop = parseInt(targetNodeStyle.marginTop, 10);
 
-      return bottom + marginTop;
+      return safeNumber(bottom + marginTop);
     }
 
     return droppableTop;
@@ -483,7 +499,7 @@ const applyTargetNodeTransition = (options: ApplyTargetNodeTransitionOptions) =>
       const { left, width } = nearestNode.getBoundingClientRect();
       const marginLeft = parseInt(targetNodeStyle.marginLeft, 10);
 
-      return left + width + marginLeft;
+      return safeNumber(left + width + marginLeft);
     }
 
     return droppableTop;
@@ -550,12 +566,13 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
 
   for (const node of nodes) {
     if (detectIsActiveDraggableNode(node, activeDraggableID)) continue;
-
     const rect = node.getBoundingClientRect();
+    const top = safeNumber(rect.top);
+    const left = safeNumber(rect.left);
     const { thresholdY, thresholdX } = getThreshold(targetRect, pointer);
     const map: Record<Direction, () => void> = {
       vertical: () => {
-        if (thresholdY <= rect.top) {
+        if (thresholdY <= top) {
           setStyles(node, {
             transition: `transform ${transitionTimeout}ms ${transitionTimingFn}`,
             transform: `translate3d(0px, ${nodeHeight}px, 0px)`,
@@ -563,7 +580,7 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
         } else {
           removeStyles(node, ['transform']);
 
-          const diff = thresholdY - rect.top;
+          const diff = safeNumber(thresholdY - top);
 
           if (diff < minimalDiff) {
             minimalDiff = diff;
@@ -572,7 +589,7 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
         }
       },
       horizontal: () => {
-        if (thresholdX <= rect.left) {
+        if (thresholdX <= left) {
           setStyles(node, {
             transition: `transform ${transitionTimeout}ms ${transitionTimingFn}`,
             transform: `translate3d(${nodeWidth}px, 0px, 0px)`,
@@ -580,7 +597,7 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
         } else {
           removeStyles(node, ['transform']);
 
-          const diff = thresholdX - rect.left;
+          const diff = safeNumber(thresholdX - left);
 
           if (diff < minimalDiff) {
             minimalDiff = diff;

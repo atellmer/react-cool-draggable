@@ -26,7 +26,7 @@ const createItems = (count: number, groupID: string) =>
     }));
 
 const TrelloApp: React.FC = () => {
-  const [columns, setColumns] = useState(['column-1', 'column-2', 'column-3', 'column-4']);
+  const [columns, setColumns] = useState(['column-1', 'column-2', 'column-3', 'column-4', 'column-5']);
   const [items, setItems] = useState([...flatten(columns.map(x => createItems(5, x)))]);
   const groupedItems = groupBy(items, x => x.groupID);
 
@@ -93,15 +93,14 @@ const TrelloApp: React.FC = () => {
                               direction='vertical'
                               droppableID={groupKey}
                               droppableGroupID='columns'
-                              transitionTimeout={200}
-                              transitionTimingFn='cubic-bezier(.17,.67,.83,.67)'>
+                              transitionTimeout={200}>
                               {({ snapshot, ...rest }) => {
                                 return (
                                   <>
                                     <DraggableColumnHeader
                                       isDragging={columnsSnapshot.isDragging}
                                       {...columnsDraggableProps}>
-                                      {groupKey} (draggable too)
+                                      {groupKey} (drag me too)
                                     </DraggableColumnHeader>
                                     <DroppableContent isDragging={snapshot.isDragging} {...rest}>
                                       {(groupedItems[groupKey] || []).map(x => {
@@ -113,8 +112,9 @@ const TrelloApp: React.FC = () => {
                                                   <CardContentLayout>
                                                     <DraggableHeader
                                                       isDragging={snapshot.isDragging}
-                                                      {...draggableProps}
-                                                    />
+                                                      {...draggableProps}>
+                                                      drag me
+                                                    </DraggableHeader>
                                                     <CardContent>{x.text}</CardContent>
                                                   </CardContentLayout>
                                                 </DraggableContent>

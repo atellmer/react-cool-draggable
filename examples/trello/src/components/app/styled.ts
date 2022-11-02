@@ -70,6 +70,8 @@ const DraggableHeader = styled.div<SnapshotProps>`
   cursor: grab;
   user-select: none;
   transition: background-color 0.2s ease-in-out;
+  color: #fff;
+  padding: 8px;
 
   ${p =>
     p.isDragging &&
