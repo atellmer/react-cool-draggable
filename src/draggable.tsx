@@ -301,7 +301,17 @@ function transformNodePosition(node: HTMLElement, { x, y }: Coordinates) {
 }
 
 function removeNodeStyles(node: HTMLElement) {
-  removeStyles(node, ['position', 'top', 'left', 'z-index', 'width', 'height', 'transform', 'transform-origin']);
+  removeStyles(node, [
+    'position',
+    'top',
+    'left',
+    'z-index',
+    'width',
+    'height',
+    'transform',
+    'transition',
+    'transform-origin',
+  ]);
 }
 
 export { Draggable };

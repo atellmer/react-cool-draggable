@@ -70,10 +70,11 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
       map[direction]();
     }
 
-    scope.removePlaceholder();
-    nodes.forEach(x => removeStyles(x, ['transition', 'transform']));
-
-    resetState();
+    setTimeout(() => {
+      scope.removePlaceholder();
+      nodes.forEach(x => removeStyles(x, ['transition', 'transform']));
+      resetState();
+    });
 
     onDragEnd({
       draggableID: activeDraggableID,
@@ -82,7 +83,7 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
       sourceIdx,
       destinationIdx,
       isMoving,
-      targetRect,
+      targetNode,
     });
   };
 

@@ -103,7 +103,7 @@ export type OnDragEndOptions = {
   sourceIdx: number;
   destinationIdx: number;
   isMoving: boolean;
-  targetRect: DOMRect;
+  targetNode: HTMLElement;
 };
 
 export { DragDropContext, useDragDropContext };
