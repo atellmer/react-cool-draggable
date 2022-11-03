@@ -2,7 +2,7 @@
 
 Drag-n-drop react library (component) for horizontal and vertical lists.
 
-![Dark](./assets/example.gif) 
+![Dark](https://github.com/atellmer/react-cool-draggable/blob/master/assets/example.gif) 
 
 - Easy to use 👨‍🎓
 - Small size (6 kb gzipped) 💪
