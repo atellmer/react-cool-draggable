@@ -9,6 +9,7 @@ Drag-n-drop react library (component) for horizontal and vertical lists.
 - Сustomizable appearance 💅
 - Touch devices support 📱
 - Any element sizes 📏
+- No dependencies ✔️
 
 One common frontend task is to create draggable cards in various lists. To simplify this task, I wrote a library that can work with horizontal and vertical lists, as well as their combinations (for example, as done in Trello).
 
@@ -168,7 +169,8 @@ import { Draggable } from 'react-cool-draggable';
 
 ```tsx
 <Draggable draggableID={x.ID}>
-  {({ snapshot, rootProps, draggableProps }) => <div {...rootProps} {...draggableProps}>Some children here...</div>}
+  {({ snapshot, rootProps, draggableProps }) =>
+    <div {...rootProps} {...draggableProps}>Some children here...</div>}
 </Draggable>
 ```
 
