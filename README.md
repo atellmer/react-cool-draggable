@@ -50,7 +50,7 @@ const handleDragEnd = options => {
 
 <DragDropContext onDragEnd={handleDragEnd}>
   <Droppable
-    direction='horizontal'
+    direction='vertical'
     droppableID='row'
     droppableGroupID='board'>
     {({ snapshot, ...rest }) => (
@@ -116,7 +116,7 @@ import { Droppable } from 'react-cool-draggable';
 
 ```tsx
 <Droppable
-  direction='horizontal'
+  direction='vertical'
   droppableID='row'
   droppableGroupID='board'>
   {({ snapshot, ...rest }) => <div {...rest}>Some children here...</div>}
