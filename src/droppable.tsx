@@ -14,6 +14,7 @@ import {
   safeNumber,
   getThreshold,
   debounce,
+  createPointer,
 } from './utils';
 import type { ID, Direction, Pointer } from './types';
 
@@ -298,12 +299,7 @@ function useIntersectionEffect(options: UseIntersectionEffectOptions) {
 
       if (isYaxesIntersected && isXaxesIntersected) {
         const targetNode = e.target as HTMLElement;
-        const pointer: Pointer =
-          e instanceof MouseEvent
-            ? { clientX: e.clientX, clientY: e.clientY }
-            : e instanceof TouchEvent
-            ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }
-            : null;
+        const pointer = createPointer(e);
 
         onIntersect(targetNode, pointer);
       }
@@ -378,12 +374,7 @@ function useMoveSensorEffect(options: UseMoveSensorEffectOptions) {
     const handleEvent = debounce((e: MouseEvent | TouchEvent) => {
       if (e.target instanceof Document) return;
       const targetNode = e.target as HTMLElement;
-      const pointer: Pointer =
-        e instanceof MouseEvent
-          ? { clientX: e.clientX, clientY: e.clientY }
-          : e instanceof TouchEvent
-          ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }
-          : null;
+      const pointer = createPointer(e);
 
       transformNodesByTarget({
         ...scope.options,

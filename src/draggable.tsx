@@ -12,6 +12,7 @@ import {
   getNodeSize,
   blockScroll,
   getItemNodes,
+  createPointer,
 } from './utils';
 import type { ID, Pointer, Coordinates } from './types';
 
@@ -47,10 +48,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
 
     const handleMoveEvent = (moveEvent: MouseEvent) => {
       if (moveEvent.target instanceof Document) return;
-      const movePointer: Pointer = {
-        clientX: moveEvent.clientX,
-        clientY: moveEvent.clientY,
-      };
+      const movePointer = createPointer(moveEvent);
 
       applyMoveSensor({
         node: targetNode,
@@ -114,10 +112,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
 
     const handleEvent = (moveEvent: TouchEvent) => {
       if (moveEvent.target instanceof Document) return;
-      const movePointer: Pointer = {
-        clientX: moveEvent.touches[0].clientX,
-        clientY: moveEvent.touches[0].clientY,
-      };
+      const movePointer = createPointer(moveEvent);
 
       applyMoveSensor({
         node: targetNode,

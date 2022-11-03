@@ -148,6 +148,17 @@ function debounce<T extends (...args) => void>(fn: T, timeout = 0): T {
   return debounced;
 }
 
+function createPointer(e: MouseEvent | TouchEvent) {
+  const pointer: Pointer =
+    e instanceof MouseEvent
+      ? { clientX: e.clientX, clientY: e.clientY }
+      : e instanceof TouchEvent
+      ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }
+      : null;
+
+  return pointer;
+}
+
 export {
   CONTEXT_ID_ATTR,
   DROPPABLE_ID_ATTR,
@@ -166,4 +177,5 @@ export {
   blockScroll,
   createBooleanMap,
   debounce,
+  createPointer,
 };
