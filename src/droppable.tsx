@@ -105,8 +105,7 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
   };
 
   useEffect(() => {
-    if (isDragging) return;
-
+    if (isDragging || !isIntersected || nodes.length === 0) return;
     nodes.forEach(node => {
       const isActive = detectIsActiveDraggableNode(node, activeDraggableID);
 
