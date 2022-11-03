@@ -70,7 +70,7 @@ const handleDragEnd = options => {
 </DragDropContext>
 ```
 
-You can also combine and nest draggable elements to create more complex components if you need to.
+You can also combine and nest droppable and draggable elements to create more complex components if you need to.
 
 ## API
 ### DragDropContext
@@ -161,7 +161,7 @@ Also, in some cases you may want to track the progress of the move in the onDrag
 
 ### Draggable
 
-You can think of this component as an element that is draggable by the user. And it is also just a component that implements logic without any external appearance. So he also needs a render function to tell him what he should look like.
+You can think of this component as an element that is draggable by the user. And it is also just a component that implements logic without any external appearance. So he also needs a render function to tell it what it should look like.
 
 ```tsx
 import { Draggable } from 'react-cool-draggable';

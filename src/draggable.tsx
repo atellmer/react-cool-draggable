@@ -46,6 +46,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
     };
 
     const handleMoveEvent = (moveEvent: MouseEvent) => {
+      if (moveEvent.target instanceof Document) return;
       const movePointer: Pointer = {
         clientX: moveEvent.clientX,
         clientY: moveEvent.clientY,
@@ -112,6 +113,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
     const unblockScroll = blockScroll(document.body);
 
     const handleEvent = (moveEvent: TouchEvent) => {
+      if (moveEvent.target instanceof Document) return;
       const movePointer: Pointer = {
         clientX: moveEvent.touches[0].clientX,
         clientY: moveEvent.touches[0].clientY,

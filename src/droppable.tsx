@@ -278,6 +278,7 @@ function useIntersectionEffect(options: UseIntersectionEffectOptions) {
   useEffect(() => {
     if (!isSomeDragging) return;
     const handleEvent = debounce((e: MouseEvent | TouchEvent) => {
+      if (e.target instanceof Document) return;
       if (!isSomeDragging) return;
       if (!isActiveGroup) return;
       if (isActive) return;
@@ -375,6 +376,7 @@ function useMoveSensorEffect(options: UseMoveSensorEffectOptions) {
     if (!isDragging) return;
 
     const handleEvent = debounce((e: MouseEvent | TouchEvent) => {
+      if (e.target instanceof Document) return;
       const targetNode = e.target as HTMLElement;
       const pointer: Pointer =
         e instanceof MouseEvent
