@@ -183,6 +183,7 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
     activeDroppableID,
     nearestNodeRef,
     transitionTimeout,
+    transitionTimingFn,
     unsubscribers,
     onDragEnd: handleDragEnd,
   });
@@ -412,7 +413,7 @@ type UseMoveEndSensorEffectOptions = {
   nearestNodeRef: React.MutableRefObject<HTMLElement>;
   unsubscribers: Array<() => void>;
   onDragEnd: (node: HTMLElement) => void;
-} & Required<Pick<DroppableProps, 'transitionTimeout'>>;
+} & Required<Pick<DroppableProps, 'transitionTimeout' | 'transitionTimingFn'>>;
 
 function useMoveEndSensorEffect(options: UseMoveEndSensorEffectOptions) {
   const {
@@ -423,6 +424,7 @@ function useMoveEndSensorEffect(options: UseMoveEndSensorEffectOptions) {
     activeDroppableID,
     nearestNodeRef,
     transitionTimeout,
+    transitionTimingFn,
     unsubscribers,
     onDragEnd,
   } = options;
@@ -447,6 +449,7 @@ function useMoveEndSensorEffect(options: UseMoveEndSensorEffectOptions) {
           targetNode,
           nearestNode,
           transitionTimeout,
+          transitionTimingFn,
           onComplete: onDragEnd,
         });
       };
@@ -481,10 +484,19 @@ type ApplyTargetNodeTransitionOptions = {
   targetNode: HTMLElement;
   nearestNode: HTMLElement | null;
   onComplete: (targetNode: HTMLElement) => void;
-} & Required<Pick<DroppableProps, 'transitionTimeout'>>;
+} & Required<Pick<DroppableProps, 'transitionTimeout' | 'transitionTimingFn'>>;
 
 const applyTargetNodeTransition = (options: ApplyTargetNodeTransitionOptions) => {
-  const { direction, contextID, activeDroppableID, targetNode, nearestNode, transitionTimeout, onComplete } = options;
+  const {
+    direction,
+    contextID,
+    activeDroppableID,
+    targetNode,
+    nearestNode,
+    transitionTimeout,
+    transitionTimingFn,
+    onComplete,
+  } = options;
   const targetNodeStyle = window.getComputedStyle(targetNode);
   const hasTransform = targetNodeStyle.transform !== 'none';
   const isVertical = direction === 'vertical';
@@ -528,7 +540,7 @@ const applyTargetNodeTransition = (options: ApplyTargetNodeTransitionOptions) =>
 
   if (hasTransform) {
     const styles = {
-      transition: `transform ${transitionTimeout}ms ease-in-out, top ${transitionTimeout}ms ease-in-out, left ${transitionTimeout}ms ease-in-out`,
+      transition: `transform ${transitionTimeout}ms ${transitionTimingFn}, top ${transitionTimeout}ms ${transitionTimingFn}, left ${transitionTimeout}ms ${transitionTimingFn}`,
       transform: `translate3D(0, 0, 0)`,
       top: undefined,
       left: undefined,

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable, OnDragEndOptions, reorder, move } from 'react-cool-draggable';
 
-import { groupBy, flatten } from '../../utils';
+import { groupBy, flatten } from '../utils';
 import {
   Root,
   DroppableBoardContent,
@@ -97,7 +97,8 @@ const TrelloApp: React.FC = () => {
                               direction='vertical'
                               droppableID={groupKey}
                               droppableGroupID='columns'
-                              transitionTimeout={200}
+                              transitionTimeout={250}
+                              transitionTimingFn='cubic-bezier(0.68, -0.55, 0.265, 1.55)'
                               debounceTimeout={0}>
                               {({ snapshot, ...rest }) => {
                                 return (

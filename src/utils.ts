@@ -82,10 +82,10 @@ function getScrollContainerFromContainer(node: HTMLElement): HTMLElement {
 
 function getNodeSize(node: HTMLElement, rect: DOMRect) {
   const style = window.getComputedStyle(node);
-  const marginTop = parseInt(style.marginTop);
-  const marginBottom = parseInt(style.marginBottom);
-  const marginRight = parseInt(style.marginRight);
-  const marginLeft = parseInt(style.marginLeft);
+  const marginTop = parseInt(style.marginTop, 10);
+  const marginBottom = parseInt(style.marginBottom, 10);
+  const marginRight = parseInt(style.marginRight, 10);
+  const marginLeft = parseInt(style.marginLeft, 10);
   const nodeWidth = safeNumber(rect.width + marginLeft + marginRight);
   const nodeHeight = safeNumber(rect.height + marginTop + marginBottom);
 

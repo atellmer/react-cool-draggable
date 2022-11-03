@@ -196,7 +196,7 @@ const Draggable: React.FC<DraggableProps> = memo(props => {
   });
 });
 
-type DraggableChildrenOptions = {
+export type DraggableChildrenOptions = {
   rootProps: {
     ref: React.Ref<any>;
     draggable: false;

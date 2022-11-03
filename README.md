@@ -118,7 +118,7 @@ import { Droppable } from 'react-cool-draggable';
   direction='horizontal'
   droppableID='row'
   droppableGroupID='board'>
-  {props => <div {...props}>Some children here...</div>}
+  {({ snapshot, ...rest }) => <div {...rest}>Some children here...</div>}
 </Droppable>
 ```
 
@@ -128,6 +128,9 @@ export type DroppableProps = {
   droppableID: string | number;
   droppableGroupID: string | number;
   transitionTimeout?: number;
+  transitionTimingFn?: string;
+  disabled?: boolean;
+  debounceTimeout?: number;
   onDragOver?: (options: OnDragOverOptions) => void;
   children: (options: DroppableChildrenOptions) => React.ReactElement;
 };
@@ -165,7 +168,7 @@ import { Draggable } from 'react-cool-draggable';
 
 ```tsx
 <Draggable draggableID={x.ID}>
-  {props => <div {...props}>Some children here...</div>}
+  {({ snapshot, rootProps, draggableProps }) => <div {...rootProps} {...draggableProps}>Some children here...</div>}
 </Draggable>
 ```
 
