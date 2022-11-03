@@ -99,7 +99,7 @@ const CardContentLayout = styled.div`
 `;
 
 const CardContent = styled.div`
-  height: 48px;
+  min-height: 48px;
   background-color: pink;
   padding: 10px;
 `;

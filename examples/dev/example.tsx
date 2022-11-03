@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled, { css } from 'styled-components';
-import { DragDropContext, Droppable, Draggable, OnDragEndOptions, reorder } from 'react-drag-on';
+import { DragDropContext, Droppable, Draggable, OnDragEndOptions, reorder } from 'react-cool-draggable';
 
 let nextID = -1;
 

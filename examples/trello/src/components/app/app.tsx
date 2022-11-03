@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DragDropContext, Droppable, Draggable, OnDragEndOptions, reorder, move } from 'react-drag-on';
+import { DragDropContext, Droppable, Draggable, OnDragEndOptions, reorder, move } from 'react-cool-draggable';
 
 import { groupBy, flatten } from '../../utils';
 import {
@@ -22,12 +22,16 @@ const createItems = (count: number, groupID: string) =>
     .map(() => ({
       ID: ++nextID,
       groupID,
-      text: `item ${nextID}`,
+      title: `item ${nextID}`,
+      text:
+        nextID % 3 === 0
+          ? 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae, dolores aliquam nihil nisi maiores eligendi sapiente minima qui...'
+          : 'content',
     }));
 
 const TrelloApp: React.FC = () => {
   const [columns, setColumns] = useState(['column-1', 'column-2', 'column-3', 'column-4', 'column-5']);
-  const [items, setItems] = useState([...flatten(columns.map(x => createItems(100, x)))]);
+  const [items, setItems] = useState([...flatten(columns.map(x => createItems(5, x)))]);
   const groupedItems = groupBy(items, x => x.groupID);
 
   const handleDragEnd = (options: OnDragEndOptions) => {
@@ -94,7 +98,7 @@ const TrelloApp: React.FC = () => {
                               droppableID={groupKey}
                               droppableGroupID='columns'
                               transitionTimeout={200}
-                              debounceTimeout={100}>
+                              debounceTimeout={0}>
                               {({ snapshot, ...rest }) => {
                                 return (
                                   <>
@@ -116,7 +120,11 @@ const TrelloApp: React.FC = () => {
                                                       {...draggableProps}>
                                                       drag me
                                                     </DraggableHeader>
-                                                    <CardContent>{x.text}</CardContent>
+                                                    <CardContent>
+                                                      {x.title}
+                                                      <br />
+                                                      {x.text}
+                                                    </CardContent>
                                                   </CardContentLayout>
                                                 </DraggableContent>
                                               );

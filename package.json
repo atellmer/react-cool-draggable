@@ -1,5 +1,5 @@
 {
-  "name": "react-drag-on",
+  "name": "react-cool-draggable",
   "version": "0.0.1",
   "author": "AlexPlex",
   "description": "Drag-n-drop react library (component) for horizontal and vertical lists.",
@@ -10,7 +10,7 @@
     "build": "npm run build:prod",
     "build:prod": "webpack --config webpack.config --env production"
   },
-  "keywords": ["react", "drag", "drag-n-drop"],
+  "keywords": ["react", "drag", "dnd", "drag-n-drop", "drag and drop", "drag&drop", "smooth", "animation", "sortable", "movable"],
   "devDependencies": {
     "@types/react": "^18.0.24",
     "@types/react-dom": "^18.0.8",

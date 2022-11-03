@@ -1,4 +1,4 @@
-# react-drag-on 🐉
+# react-cool-draggable
 
 Drag-n-drop react library (component) for horizontal and vertical lists.
 
@@ -8,17 +8,18 @@ Drag-n-drop react library (component) for horizontal and vertical lists.
 - Animated transitions 🎢
 - Сustomizable appearance 💅
 - Touch devices support 📱
+- Any element sizes 📏
 
 One common frontend task is to create draggable cards in various lists. To simplify this task, I wrote a library that can work with horizontal and vertical lists, as well as their combinations (for example, as done in Trello).
 
 ## Installation
 npm:
 ```
-npm install react-drag-on
+npm install react-cool-draggable
 ```
 yarn:
 ```
-yarn add react-drag-on
+yarn add react-cool-draggable
 ```
 
 ## Usage
@@ -29,7 +30,7 @@ import {
   Droppable,
   Draggable,
   reorder,
-} from 'react-drag-on';
+} from 'react-cool-draggable';
 
 const handleDragEnd = options => {
   const newItems = reorder({
@@ -72,7 +73,7 @@ You can also combine and nest draggable elements to create more complex componen
 This library uses the react context as a way to communicate between children in the tree, so the context must be explicitly invoked at the root of the component. The context has one callback onDragEnd that is called when the user drops the element.
 
 ```tsx
-import { DragDropContext } from 'react-drag-on';
+import { DragDropContext } from 'react-cool-draggable';
 ```
 
 ```tsx
@@ -98,14 +99,14 @@ export type OnDragEndOptions = {
   sourceIdx: number;
   destinationIdx: number;
   isMoving: boolean;
-  targetRect: DOMRect;
+  targetNode: HTMLElement;
 };
 ```
 ### Droppable
 Think of this component as a surface on which elements move. It is simple logic where all the logic is hidden. At the same time, it is based on the concept of RenderProps and expects to receive a render function as children.
 
 ```tsx
-import { Droppable } from 'react-drag-on';
+import { Droppable } from 'react-cool-draggable';
 ```
 
 ```tsx
@@ -144,8 +145,7 @@ The snapshot can be useful for you to understand and react to real-time dragging
 ```tsx
 export type OnDragOverOptions = {
   nearestNode: HTMLElement | null;
-  nearestNodeRect: DOMRect;
-  targetRect: DOMRect;
+  targetNode: HTMLElement;
 };
 ```
 
@@ -156,7 +156,7 @@ Also, in some cases you may want to track the progress of the move in the onDrag
 You can think of this component as an element that is draggable by the user. And it is also just a component that implements logic without any external appearance. So he also needs a render function to tell him what he should look like.
 
 ```tsx
-import { Draggable } from 'react-drag-on';
+import { Draggable } from 'react-cool-draggable';
 ```
 
 ```tsx
@@ -187,7 +187,7 @@ In the render function declaration, you must pass rootProps and draggableProps t
 ### reorder and move
 
 ```tsx
-import { reorder, move } from 'react-drag-on';
+import { reorder, move } from 'react-cool-draggable';
 ```
 
 These are the functions you need to apply inside the onDragEnd callback to sort the list of items in the component's state correctly. In this case, reorder does the usual sorting, and move - moving an element from one group to another, if you implement an exchange of elements between two or more droppable surfaces. This may sound complicated, but it isn't, so please see examples/trello for examples of how to use these functions.
