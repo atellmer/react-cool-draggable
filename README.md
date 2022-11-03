@@ -88,7 +88,7 @@ import { DragDropContext } from 'react-cool-draggable';
 ```
 
 ```tsx
-export type DragDropContextProps = {
+type DragDropContextProps = {
   onDragEnd: (options: OnDragEndOptions) => void;
   children: React.ReactNode;
 };
