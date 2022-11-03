@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable, OnDragEndOptions, reorder, move } from 'react-cool-draggable';
 
-import { groupBy, flatten } from '../../utils';
+import { groupBy, flatten } from '../utils';
 import {
   Root,
   DroppableBoardContent,

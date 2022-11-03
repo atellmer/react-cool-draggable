@@ -16,19 +16,9 @@
       "es7",
       "dom"
     ],
-    "baseUrl": ".",
-    "paths": {
-      "react-cool-draggable": [
-        "./src/index"
-      ],
-      "react-cool-draggable/*": [
-        "./src/*"
-      ],
-    }
+    "baseUrl": "."
   },
   "include": [
-    "./src/**/*",
     "./examples/**/*",
-    "./*.js"
   ]
 }
