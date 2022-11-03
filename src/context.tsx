@@ -16,6 +16,7 @@ const DragDropContext: React.FC<DragDropContextProps> = props => {
     state.onComplete();
     mergeState({
       isDragging: false,
+      isIntersected: false,
       activeDroppableID: null,
       activeDraggableID: null,
       nodeWidth: null,
@@ -49,6 +50,7 @@ export type DragDropContextValue = {
 
 type ContextState = {
   isDragging: boolean;
+  isIntersected: boolean;
   contextID: number;
   activeDroppableID: ID;
   activeDroppableGroupID: ID;
@@ -65,6 +67,7 @@ const Context = createContext<DragDropContextValue>(null);
 
 const inititalState: ContextState = {
   isDragging: false,
+  isIntersected: false,
   contextID: null,
   activeDroppableID: null,
   activeDroppableGroupID: null,

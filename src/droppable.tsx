@@ -51,6 +51,7 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
     activeDraggableID,
     activeDroppableID,
     activeDroppableGroupID,
+    isIntersected,
     unsubscribers,
     onInsertPlaceholder,
   } = state;
@@ -87,7 +88,7 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
     }
 
     setTimeout(() => {
-      scope.removePlaceholder();
+      scope.removePlaceholder(true);
       nodes.forEach(x => removeStyles(x, ['transition', 'transform']));
       resetState();
     });
@@ -134,6 +135,7 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
     onIntersect: (targetNode, pointer) => {
       mergeState({
         activeDroppableID: droppableID,
+        isIntersected: true,
         scrollContainer: getScrollContainerFromContainer(rootRef.current),
         onInsertPlaceholder: () => {
           transformNodesByTarget({
@@ -162,6 +164,9 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
     nodeHeight,
     container: rootRef.current,
     scope,
+    isIntersected,
+    transitionTimeout,
+    transitionTimingFn,
     onInsertPlaceholder,
   });
 
@@ -229,7 +234,7 @@ Droppable.defaultProps = {
 };
 
 type DroppableScope = {
-  removePlaceholder: () => void;
+  removePlaceholder: (fromDragEnd?: boolean) => void;
 };
 
 type DroppableContextValue = {} & Pick<DroppableProps, 'direction' | 'droppableID' | 'droppableGroupID' | 'disabled'>;
@@ -332,26 +337,82 @@ type UsePlaceholderEffectOptions = {
   nodeHeight: number;
   container: HTMLElement;
   scope: DroppableScope;
+  isIntersected: boolean;
   onInsertPlaceholder: () => void;
-};
+} & Required<Pick<DroppableProps, 'transitionTimeout' | 'transitionTimingFn'>>;
 
 function usePlaceholderEffect(options: UsePlaceholderEffectOptions) {
-  const { isDragging, nodeWidth, nodeHeight, container, scope, onInsertPlaceholder } = options;
+  const {
+    isDragging,
+    nodeWidth,
+    nodeHeight,
+    container,
+    scope,
+    isIntersected,
+    transitionTimeout,
+    transitionTimingFn,
+    onInsertPlaceholder,
+  } = options;
 
   useLayoutEffect(() => {
     if (isDragging) {
       const placeholder = document.createElement('div');
+      const inner = document.createElement('div');
 
+      placeholder.appendChild(inner);
       container.appendChild(placeholder);
 
       setStyles(placeholder, {
-        width: `${nodeWidth}px`,
-        height: `${nodeHeight}px`,
         flex: `0 0 auto`,
       });
 
-      scope.removePlaceholder = () => {
-        placeholder.parentElement.removeChild(placeholder);
+      if (isIntersected) {
+        setStyles(placeholder, {
+          maxWidth: 0,
+          maxHeight: 0,
+        });
+
+        setStyles(inner, {
+          width: `${nodeWidth}px`,
+          height: `${nodeHeight}px`,
+        });
+
+        requestAnimationFrame(() => {
+          setStyles(placeholder, {
+            transition: `max-width ${transitionTimeout}ms ${transitionTimingFn}, max-height ${transitionTimeout}ms ${transitionTimingFn}`,
+            maxWidth: `${nodeWidth}px`,
+            maxHeight: `${nodeHeight}px`,
+          });
+        });
+      } else {
+        setStyles(placeholder, {
+          width: `${nodeWidth}px`,
+          height: `${nodeHeight}px`,
+        });
+      }
+
+      scope.removePlaceholder = (fromDragEnd: boolean) => {
+        if (fromDragEnd) {
+          placeholder.parentElement.removeChild(placeholder);
+        } else {
+          setStyles(placeholder, {
+            transition: `max-width ${transitionTimeout}ms ${transitionTimingFn}, max-height ${transitionTimeout}ms ${transitionTimingFn}`,
+            maxWidth: `${nodeWidth}px`,
+            maxHeight: `${nodeHeight}px`,
+          });
+
+          requestAnimationFrame(() => {
+            setStyles(placeholder, {
+              maxWidth: 0,
+              maxHeight: 0,
+            });
+
+            setTimeout(() => {
+              placeholder.parentElement.removeChild(placeholder);
+            }, transitionTimeout);
+          });
+        }
+
         scope.removePlaceholder = () => {};
       };
 
