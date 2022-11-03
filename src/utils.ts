@@ -6,6 +6,8 @@ const DRAGGABLE_ID_ATTR = 'data-dnd-draggable-id';
 
 function setStyles(node: HTMLElement, style: Record<string, string | number>) {
   const namesMap = {
+    maxWidth: 'max-width',
+    maxHeight: 'max-height',
     zIndex: 'z-index',
     transformOrigin: 'transform-origin',
   };

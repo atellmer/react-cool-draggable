@@ -105,12 +105,19 @@ const Droppable: React.FC<DroppableProps> = memo(props => {
 
   useEffect(() => {
     if (isDragging) return;
-    setTimeout(() => {
-      nodes.forEach(x => {
-        const isActive = detectIsActiveDraggableNode(x, activeDraggableID);
 
-        !isActive && removeStyles(x, ['transition', 'transform']);
-      });
+    nodes.forEach(node => {
+      const isActive = detectIsActiveDraggableNode(node, activeDraggableID);
+
+      if (!isActive) {
+        setStyles(node, {
+          transform: `translate3D(0, 0, 0)`,
+        });
+
+        setTimeout(() => {
+          removeStyles(node, ['transition', 'transform']);
+        }, transitionTimeout);
+      }
     });
   }, [isDragging]);
 
@@ -332,15 +339,10 @@ function usePlaceholderEffect(options: UsePlaceholderEffectOptions) {
   const { isDragging, nodeWidth, nodeHeight, container, scope, onInsertPlaceholder } = options;
 
   useLayoutEffect(() => {
-    let placeholder: HTMLDivElement = null;
-
     if (isDragging) {
-      placeholder = document.createElement('div');
+      const placeholder = document.createElement('div');
 
-      scope.removePlaceholder = () => {
-        placeholder.parentElement.removeChild(placeholder);
-        scope.removePlaceholder = () => {};
-      };
+      container.appendChild(placeholder);
 
       setStyles(placeholder, {
         width: `${nodeWidth}px`,
@@ -348,7 +350,11 @@ function usePlaceholderEffect(options: UsePlaceholderEffectOptions) {
         flex: `0 0 auto`,
       });
 
-      container.appendChild(placeholder);
+      scope.removePlaceholder = () => {
+        placeholder.parentElement.removeChild(placeholder);
+        scope.removePlaceholder = () => {};
+      };
+
       onInsertPlaceholder();
     }
 
