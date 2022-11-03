@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('./umd/react-drag-on.production.min.js');
+module.exports = require('./umd/react-cool-draggable.production.min.js');

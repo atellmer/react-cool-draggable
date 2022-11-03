@@ -3,7 +3,7 @@
 Drag-n-drop react library (component) for horizontal and vertical lists.
 
 - Easy to use 👨‍🎓
-- Small size (5 kb gzipped) 💪
+- Small size (6 kb gzipped) 💪
 - 60 FPS performance 🚀
 - Animated transitions 🎢
 - Сustomizable appearance 💅

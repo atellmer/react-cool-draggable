@@ -1,8 +1,8 @@
 const path = require('path');
 const webpack = require('webpack');
 
-const libraryName = 'ReactDragOn';
-const libraryNameKebabCase = 'react-drag-on';
+const libraryName = 'ReactCoolDraggable';
+const libraryNameKebabCase = 'react-cool-draggable';
 const config = env => ({
   mode: env.production ? 'production' : 'development',
   devtool: 'source-map',
