@@ -1,6 +1,6 @@
 import React, { useRef, useLayoutEffect, useEffect, memo, useMemo, createContext, useContext } from 'react';
 
-import { useDragDropContext } from './context';
+import { useDragDropContext, type DragDropContextValue } from './context';
 import {
   CONTEXT_ID_ATTR,
   DROPPABLE_ID_ATTR,
@@ -30,200 +30,218 @@ export type DroppableProps = {
   onDragOver?: (options: OnDragOverOptions) => void;
 };
 
-const Droppable: React.FC<DroppableProps> = memo(props => {
-  const {
-    droppableID,
-    droppableGroupID,
-    direction,
-    transitionTimeout,
-    transitionTimingFn,
-    debounceTimeout,
-    disabled,
-    children,
-    onDragOver,
-  } = props;
-  const { state, mergeState, resetState, onDragEnd } = useDragDropContext();
-  const {
-    isDragging: isSomeDragging,
-    contextID,
-    nodeWidth,
-    nodeHeight,
-    activeDraggableID,
-    activeDroppableID,
-    activeDroppableGroupID,
-    isIntersected,
-    unsubscribers,
-    onInsertPlaceholder,
-  } = state;
-  const isActiveGroup = !disabled && droppableGroupID === activeDroppableGroupID;
-  const isActive = isActiveGroup && droppableID === activeDroppableID;
-  const isDragging = isSomeDragging && isActive;
-  const rootRef = useRef<HTMLElement>(null);
-  const nearestNodeRef = useRef<HTMLElement>(null);
-  const scope = useMemo<DroppableScope>(() => ({ removePlaceholder: () => {} }), []);
-  const nodes = useMemo(() => (rootRef.current ? getItemNodes(contextID, droppableID) : []), [isDragging]);
+const Droppable: React.FC<DroppableProps> = props => {
+  const dragDropContext = useDragDropContext();
+  const { state } = dragDropContext;
+  const { isDragging, activeDroppableID } = state;
+  const updatingKey = `${isDragging}:${activeDroppableID}`;
 
-  const handleDragEnd = (targetNode: HTMLElement) => {
-    const sourceIdx = nodes.findIndex(x => detectIsActiveDraggableNode(x, activeDraggableID));
-    const targetRect = targetNode.getBoundingClientRect();
-    const isMoving = sourceIdx === -1;
-    let destinationIdx = 0;
+  return <DroppableInner {...props} updatingKey={updatingKey} dragDropContext={dragDropContext} />;
+};
 
-    for (const node of nodes) {
-      const rect = node.getBoundingClientRect();
-      const map: Record<DroppableProps['direction'], () => void> = {
-        vertical: () => {
-          if (safeNumber(targetRect.top + targetRect.height) > safeNumber(rect.top + rect.height)) {
-            destinationIdx++;
-          }
-        },
-        horizontal: () => {
-          if (safeNumber(targetRect.left + targetRect.width) > safeNumber(rect.left + rect.width)) {
-            destinationIdx++;
-          }
-        },
-      };
+type DroppableInnerProps = {
+  updatingKey: string;
+  dragDropContext: DragDropContextValue;
+} & DroppableProps;
 
-      map[direction]();
-    }
-
-    setTimeout(() => {
-      scope.removePlaceholder(true);
-      nodes.forEach(x => removeStyles(x, ['transition', 'transform']));
-      resetState();
-    });
-
-    onDragEnd({
-      draggableID: activeDraggableID,
+const DroppableInner: React.FC<DroppableInnerProps> = memo(
+  props => {
+    const {
       droppableID,
       droppableGroupID,
-      sourceIdx,
-      destinationIdx,
-      isMoving,
-      targetNode,
-    });
-  };
-
-  useEffect(() => {
-    if (isDragging || !isIntersected || nodes.length === 0) return;
-    nodes.forEach(node => {
-      const isActive = detectIsActiveDraggableNode(node, activeDraggableID);
-
-      if (!isActive) {
-        setStyles(node, {
-          transform: `translate3D(0, 0, 0)`,
-        });
-
-        setTimeout(() => {
-          removeStyles(node, ['transition', 'transform']);
-        }, transitionTimeout);
-      }
-    });
-  }, [isDragging]);
-
-  useIntersectionEffect({
-    contextID,
-    activeDraggableID,
-    activeDroppableID,
-    isActiveGroup,
-    isActive,
-    isSomeDragging,
-    debounceTimeout,
-    rootNode: rootRef.current,
-    unsubscribers,
-    onIntersect: (targetNode, pointer) => {
-      mergeState({
-        activeDroppableID: droppableID,
-        isIntersected: true,
-        scrollContainer: getScrollContainerFromContainer(rootRef.current),
-        onInsertPlaceholder: () => {
-          transformNodesByTarget({
-            direction,
-            targetNode,
-            nodeWidth,
-            nodeHeight,
-            pointer,
-            activeDraggableID,
-            transitionTimeout,
-            transitionTimingFn,
-            nodes: getItemNodes(contextID, droppableID),
-            onMarkNearestNode: (nearestNode, targetNode) => {
-              nearestNodeRef.current = nearestNode || null;
-              onDragOver({ nearestNode, targetNode });
-            },
-          });
-        },
-      });
-    },
-  });
-
-  usePlaceholderEffect({
-    isDragging,
-    nodeWidth,
-    nodeHeight,
-    container: rootRef.current,
-    scope,
-    isIntersected,
-    transitionTimeout,
-    transitionTimingFn,
-    onInsertPlaceholder,
-  });
-
-  useMoveSensorEffect({
-    isDragging,
-    unsubscribers,
-    transformNodesByTargetOptions: {
       direction,
-      nodes,
-      activeDraggableID,
-      nodeHeight,
-      nodeWidth,
       transitionTimeout,
       transitionTimingFn,
-      onMarkNearestNode: (nearestNode, targetNode) => {
-        nearestNodeRef.current = nearestNode || null;
-        onDragOver({ nearestNode, targetNode });
-      },
-    },
-  });
-
-  useMoveEndSensorEffect({
-    direction,
-    isDragging,
-    contextID,
-    activeDraggableID,
-    activeDroppableID,
-    nearestNodeRef,
-    transitionTimeout,
-    transitionTimingFn,
-    unsubscribers,
-    onDragEnd: handleDragEnd,
-  });
-
-  const contextValue = useMemo<DroppableContextValue>(
-    () => ({
-      direction,
-      droppableID,
-      droppableGroupID,
+      debounceTimeout,
       disabled,
-    }),
-    [direction, droppableID, droppableGroupID, disabled],
-  );
+      dragDropContext,
+      children,
+      onDragOver,
+    } = props;
+    const { state, mergeState, resetState, onDragEnd } = dragDropContext;
+    const {
+      isDragging: isSomeDragging,
+      contextID,
+      nodeWidth,
+      nodeHeight,
+      activeDraggableID,
+      activeDroppableID,
+      activeDroppableGroupID,
+      isIntersected,
+      unsubscribers,
+      onInsertPlaceholder,
+    } = state;
+    const isActiveGroup = !disabled && droppableGroupID === activeDroppableGroupID;
+    const isActive = isActiveGroup && droppableID === activeDroppableID;
+    const isDragging = isSomeDragging && isActive;
+    const rootRef = useRef<HTMLElement>(null);
+    const nearestNodeRef = useRef<HTMLElement>(null);
+    const scope = useMemo<DroppableScope>(() => ({ removePlaceholder: () => {} }), []);
+    const nodes = useMemo(() => (rootRef.current ? getItemNodes(contextID, droppableID) : []), [isDragging]);
 
-  return (
-    <DroppableContext.Provider value={contextValue}>
-      {children({
-        ref: rootRef,
-        [CONTEXT_ID_ATTR]: contextID,
-        [DROPPABLE_ID_ATTR]: droppableID,
-        snapshot: {
-          isDragging,
+    const handleDragEnd = (targetNode: HTMLElement) => {
+      const sourceIdx = nodes.findIndex(x => detectIsActiveDraggableNode(x, activeDraggableID));
+      const targetRect = targetNode.getBoundingClientRect();
+      const isMoving = sourceIdx === -1;
+      let destinationIdx = 0;
+
+      for (const node of nodes) {
+        const rect = node.getBoundingClientRect();
+        const map: Record<DroppableProps['direction'], () => void> = {
+          vertical: () => {
+            if (safeNumber(targetRect.top + targetRect.height) > safeNumber(rect.top + rect.height)) {
+              destinationIdx++;
+            }
+          },
+          horizontal: () => {
+            if (safeNumber(targetRect.left + targetRect.width) > safeNumber(rect.left + rect.width)) {
+              destinationIdx++;
+            }
+          },
+        };
+
+        map[direction]();
+      }
+
+      setTimeout(() => {
+        scope.removePlaceholder(true);
+        nodes.forEach(x => removeStyles(x, ['transition', 'transform']));
+        resetState();
+      });
+
+      onDragEnd({
+        draggableID: activeDraggableID,
+        droppableID,
+        droppableGroupID,
+        sourceIdx,
+        destinationIdx,
+        isMoving,
+        targetNode,
+      });
+    };
+
+    useEffect(() => {
+      if (isDragging || !isIntersected || nodes.length === 0) return;
+      nodes.forEach(node => {
+        const isActive = detectIsActiveDraggableNode(node, activeDraggableID);
+
+        if (!isActive) {
+          setStyles(node, {
+            transform: `translate3D(0, 0, 0)`,
+          });
+
+          setTimeout(() => {
+            removeStyles(node, ['transition', 'transform']);
+          }, transitionTimeout);
+        }
+      });
+    }, [isDragging]);
+
+    useIntersectionEffect({
+      contextID,
+      activeDraggableID,
+      activeDroppableID,
+      isActiveGroup,
+      isActive,
+      isSomeDragging,
+      debounceTimeout,
+      rootNode: rootRef.current,
+      unsubscribers,
+      onIntersect: (targetNode, pointer) => {
+        mergeState({
+          activeDroppableID: droppableID,
+          isIntersected: true,
+          scrollContainer: getScrollContainerFromContainer(rootRef.current),
+          onInsertPlaceholder: () => {
+            transformNodesByTarget({
+              direction,
+              targetNode,
+              nodeWidth,
+              nodeHeight,
+              pointer,
+              activeDraggableID,
+              transitionTimeout,
+              transitionTimingFn,
+              nodes: getItemNodes(contextID, droppableID),
+              onMarkNearestNode: (nearestNode, targetNode) => {
+                nearestNodeRef.current = nearestNode || null;
+                onDragOver({ nearestNode, targetNode });
+              },
+            });
+          },
+        });
+      },
+    });
+
+    usePlaceholderEffect({
+      isDragging,
+      nodeWidth,
+      nodeHeight,
+      container: rootRef.current,
+      scope,
+      isIntersected,
+      transitionTimeout,
+      transitionTimingFn,
+      onInsertPlaceholder,
+    });
+
+    useMoveSensorEffect({
+      isDragging,
+      unsubscribers,
+      transformNodesByTargetOptions: {
+        direction,
+        nodes,
+        activeDraggableID,
+        nodeHeight,
+        nodeWidth,
+        transitionTimeout,
+        transitionTimingFn,
+        onMarkNearestNode: (nearestNode, targetNode) => {
+          nearestNodeRef.current = nearestNode || null;
+          onDragOver({ nearestNode, targetNode });
         },
-        onDragStart: defaultHandleDragStart,
-      })}
-    </DroppableContext.Provider>
-  );
-});
+      },
+    });
+
+    useMoveEndSensorEffect({
+      direction,
+      isDragging,
+      contextID,
+      activeDraggableID,
+      activeDroppableID,
+      nearestNodeRef,
+      transitionTimeout,
+      transitionTimingFn,
+      unsubscribers,
+      onDragEnd: handleDragEnd,
+    });
+
+    const contextValue = useMemo<DroppableContextValue>(
+      () => ({
+        direction,
+        droppableID,
+        droppableGroupID,
+        disabled,
+      }),
+      [direction, droppableID, droppableGroupID, disabled],
+    );
+
+    return (
+      <DroppableContext.Provider value={contextValue}>
+        {children({
+          ref: rootRef,
+          [CONTEXT_ID_ATTR]: contextID,
+          [DROPPABLE_ID_ATTR]: droppableID,
+          snapshot: {
+            isDragging,
+          },
+          onDragStart: defaultHandleDragStart,
+        })}
+      </DroppableContext.Provider>
+    );
+  },
+  (prevProps, nextProps) => prevProps.updatingKey === nextProps.updatingKey,
+);
 
 Droppable.defaultProps = {
   transitionTimeout: 200,

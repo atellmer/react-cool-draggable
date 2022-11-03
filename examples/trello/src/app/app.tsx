@@ -30,7 +30,7 @@ const createItems = (count: number, groupID: string) =>
     }));
 
 const TrelloApp: React.FC = () => {
-  const [columns, setColumns] = useState(['column-1', 'column-2', 'column-3', 'column-4', 'column-5']);
+  const [columns, setColumns] = useState(['col-1', 'col-2', 'col-3', 'col-4', 'col-5']);
   const [items, setItems] = useState([...flatten(columns.map(x => createItems(5, x)))]);
   const groupedItems = groupBy(items, x => x.groupID);
 
@@ -97,8 +97,8 @@ const TrelloApp: React.FC = () => {
                               direction='vertical'
                               droppableID={groupKey}
                               droppableGroupID='columns'
-                              transitionTimeout={300}
-                              transitionTimingFn='cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+                              transitionTimeout={200}
+                              transitionTimingFn='cubic-bezier(0.2, 0, 0, 1)'
                               debounceTimeout={0}>
                               {({ snapshot, ...rest }) => {
                                 return (
