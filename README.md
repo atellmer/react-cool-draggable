@@ -97,7 +97,7 @@ export type DragDropContextProps = {
 The onDragEnd callback accepts a number of options that may be useful to you later.
 
 ```tsx
-export type OnDragEndOptions = {
+type OnDragEndOptions = {
   draggableID: string | number;
   droppableID: string | number;
   droppableGroupID: string | number;
@@ -124,7 +124,7 @@ import { Droppable } from 'react-cool-draggable';
 ```
 
 ```tsx
-export type DroppableProps = {
+type DroppableProps = {
   direction: 'horizontal' | 'vertical';
   droppableID: string | number;
   droppableGroupID: string | number;
@@ -151,7 +151,7 @@ type DroppableChildrenOptions = {
 The snapshot can be useful for you to understand and react to real-time dragging, such as changing the surface color to let the user know that the dragging mode has been activated.
 
 ```tsx
-export type OnDragOverOptions = {
+type OnDragOverOptions = {
   nearestNode: HTMLElement | null;
   targetNode: HTMLElement;
 };
