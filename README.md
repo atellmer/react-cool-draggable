@@ -86,7 +86,7 @@ type DraggableElement = HTMLElement | SVGElement;
 
 ### DragDropContext
 
-This library uses the react context as a way to communicate between children in the tree, so the context must be explicitly invoked at the root of the component. The context has one callback onDragEnd that is called when the user drops the element.
+This library uses the react context as a way to communicate between children in the tree, so the context must be explicitly invoked at the root of the component.
 
 ```tsx
 import { DragDropContext } from 'react-cool-draggable';
