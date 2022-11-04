@@ -26,6 +26,7 @@ const DroppableBoardContent = styled.div<SnapshotProps>`
 
 const Column = styled.div`
   width: 300px;
+  flex: 0 0 300px;
   margin: 10px;
 `;
 
