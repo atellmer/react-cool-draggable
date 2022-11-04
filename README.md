@@ -18,6 +18,7 @@ One common frontend task is to create draggable cards in various lists. To simpl
 ## Demo
 
 - [Trello app](https://atellmer.github.io/react-cool-draggable/examples/trello/)
+- [Large board](https://atellmer.github.io/react-cool-draggable/examples/large-board/)
 
 ## Installation
 npm:
