@@ -1,10 +1,10 @@
-import type { ID, Pointer } from './types';
+import type { ID, Pointer, DraggableElement } from './types';
 
 const CONTEXT_ID_ATTR = 'data-dnd-context-id';
 const DROPPABLE_ID_ATTR = 'data-dnd-droppable-id';
 const DRAGGABLE_ID_ATTR = 'data-dnd-draggable-id';
 
-function setStyles(node: HTMLElement, style: Record<string, string | number>) {
+function setStyles(node: DraggableElement, style: Record<string, string | number>) {
   const namesMap = {
     maxWidth: 'max-width',
     maxHeight: 'max-height',
@@ -21,7 +21,7 @@ function setStyles(node: HTMLElement, style: Record<string, string | number>) {
   }
 }
 
-function removeStyles(node: HTMLElement, keys: Array<string>) {
+function removeStyles(node: DraggableElement, keys: Array<string>) {
   for (const key of keys) {
     if (node.style.getPropertyValue(key)) {
       node.style.removeProperty(key);
@@ -31,7 +31,7 @@ function removeStyles(node: HTMLElement, keys: Array<string>) {
   removeStyleAttrIfEmpty(node);
 }
 
-function getItemNodes(contextID: ID, droppableID: ID): Array<HTMLElement> {
+function getItemNodes(contextID: ID, droppableID: ID): Array<DraggableElement> {
   return Array.from(
     document.querySelectorAll(
       `[${CONTEXT_ID_ATTR}="${contextID}"][${DROPPABLE_ID_ATTR}="${droppableID}"][${DRAGGABLE_ID_ATTR}]`,
@@ -39,19 +39,19 @@ function getItemNodes(contextID: ID, droppableID: ID): Array<HTMLElement> {
   );
 }
 
-function detectIsActiveDraggableNode(node: HTMLElement, activeDraggableID: ID) {
+function detectIsActiveDraggableNode(node: DraggableElement, activeDraggableID: ID) {
   return node.getAttribute(DRAGGABLE_ID_ATTR) === `${activeDraggableID}`;
 }
 
-function getActiveDraggableNode(contextID: number, activeDraggableID: ID): HTMLElement {
+function getActiveDraggableNode(contextID: number, activeDraggableID: ID): DraggableElement {
   return document.querySelector(`[${CONTEXT_ID_ATTR}="${contextID}"][${DRAGGABLE_ID_ATTR}="${activeDraggableID}"]`);
 }
 
-function getActiveDroppableNode(contextID: number, activeDroppableID: ID): HTMLElement {
+function getActiveDroppableNode(contextID: number, activeDroppableID: ID): DraggableElement {
   return document.querySelector(`[${CONTEXT_ID_ATTR}="${contextID}"][${DROPPABLE_ID_ATTR}="${activeDroppableID}"]`);
 }
 
-function getScrollContainer(node: HTMLElement): HTMLElement {
+function getScrollContainer(node: DraggableElement): DraggableElement {
   let style = getComputedStyle(node);
   const excludeStaticParent = style.position === 'absolute';
   const overflowRegex = /(auto|scroll)/;
@@ -71,7 +71,7 @@ function getScrollContainer(node: HTMLElement): HTMLElement {
   return document.body;
 }
 
-function getScrollContainerFromContainer(node: HTMLElement): HTMLElement {
+function getScrollContainerFromContainer(node: DraggableElement): DraggableElement {
   const style = getComputedStyle(node);
   const overflowRegex = /(auto|scroll)/;
 
@@ -82,7 +82,7 @@ function getScrollContainerFromContainer(node: HTMLElement): HTMLElement {
   return getScrollContainer(node);
 }
 
-function getNodeSize(node: HTMLElement, rect: DOMRect) {
+function getNodeSize(node: DraggableElement, rect: DOMRect) {
   const style = window.getComputedStyle(node);
   const marginTop = parseInt(style.marginTop, 10);
   const marginBottom = parseInt(style.marginBottom, 10);
@@ -112,7 +112,7 @@ function getThreshold(rect: DOMRect, pointer: Pointer) {
   };
 }
 
-function blockScroll(node: HTMLElement) {
+function blockScroll(node: DraggableElement) {
   const overflowValue = node.style.getPropertyValue('overflow');
 
   node.style.setProperty('overflow', 'hidden');
@@ -128,7 +128,7 @@ function blockScroll(node: HTMLElement) {
   };
 }
 
-function removeStyleAttrIfEmpty(node: HTMLElement) {
+function removeStyleAttrIfEmpty(node: DraggableElement) {
   if (!node.getAttribute('style')) {
     node.removeAttribute('style');
   }

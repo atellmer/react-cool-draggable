@@ -1,5 +1,6 @@
 import React, { useRef, useLayoutEffect, useEffect, memo, useMemo, createContext, useContext } from 'react';
 
+import type { ID, Direction, Pointer, DraggableElement } from './types';
 import { useDragDropContext, type DragDropContextValue } from './context';
 import {
   CONTEXT_ID_ATTR,
@@ -16,7 +17,6 @@ import {
   debounce,
   createPointer,
 } from './utils';
-import type { ID, Direction, Pointer } from './types';
 
 export type DroppableProps = {
   direction: Direction;
@@ -74,27 +74,27 @@ const DroppableInner: React.FC<DroppableInnerProps> = memo(
     const isActiveGroup = !disabled && droppableGroupID === activeDroppableGroupID;
     const isActive = isActiveGroup && droppableID === activeDroppableID;
     const isDragging = isSomeDragging && isActive;
-    const rootRef = useRef<HTMLElement>(null);
-    const nearestNodeRef = useRef<HTMLElement>(null);
+    const rootRef = useRef<DraggableElement>(null);
+    const nearestNodeRef = useRef<DraggableElement>(null);
     const scope = useMemo<DroppableScope>(() => ({ removePlaceholder: () => {} }), []);
     const nodes = useMemo(() => (rootRef.current ? getItemNodes(contextID, droppableID) : []), [isDragging]);
 
-    const handleDragEnd = (targetNode: HTMLElement) => {
+    const handleDragEnd = (targetNode: DraggableElement) => {
       const sourceIdx = nodes.findIndex(x => detectIsActiveDraggableNode(x, activeDraggableID));
-      const targetRect = targetNode.getBoundingClientRect();
+      const targetNodeRect = targetNode.getBoundingClientRect();
       const isMoving = sourceIdx === -1;
       let destinationIdx = 0;
 
       for (const node of nodes) {
-        const rect = node.getBoundingClientRect();
+        const nodeRect = node.getBoundingClientRect();
         const map: Record<DroppableProps['direction'], () => void> = {
           vertical: () => {
-            if (safeNumber(targetRect.top + targetRect.height) > safeNumber(rect.top + rect.height)) {
+            if (safeNumber(targetNodeRect.top + targetNodeRect.height) > safeNumber(nodeRect.top + nodeRect.height)) {
               destinationIdx++;
             }
           },
           horizontal: () => {
-            if (safeNumber(targetRect.left + targetRect.width) > safeNumber(rect.left + rect.width)) {
+            if (safeNumber(targetNodeRect.left + targetNodeRect.width) > safeNumber(nodeRect.left + nodeRect.width)) {
               destinationIdx++;
             }
           },
@@ -120,22 +120,13 @@ const DroppableInner: React.FC<DroppableInnerProps> = memo(
       });
     };
 
-    useEffect(() => {
-      if (isDragging || !isIntersected || nodes.length === 0) return;
-      nodes.forEach(node => {
-        const isActive = detectIsActiveDraggableNode(node, activeDraggableID);
-
-        if (!isActive) {
-          setStyles(node, {
-            transform: `translate3D(0, 0, 0)`,
-          });
-
-          setTimeout(() => {
-            removeStyles(node, ['transition', 'transform']);
-          }, transitionTimeout);
-        }
-      });
-    }, [isDragging]);
+    useBackwardTransitionEffect({
+      isDragging,
+      isIntersected,
+      activeDraggableID,
+      nodes,
+      transitionTimeout,
+    });
 
     useIntersectionEffect({
       contextID,
@@ -185,7 +176,7 @@ const DroppableInner: React.FC<DroppableInnerProps> = memo(
       onInsertPlaceholder,
     });
 
-    useMoveSensorEffect({
+    useDragMoveEffect({
       isDragging,
       unsubscribers,
       transformNodesByTargetOptions: {
@@ -203,7 +194,7 @@ const DroppableInner: React.FC<DroppableInnerProps> = memo(
       },
     });
 
-    useMoveEndSensorEffect({
+    useDragEndEffect({
       direction,
       isDragging,
       contextID,
@@ -275,20 +266,48 @@ export type DroppableChildrenOptions = {
 };
 
 export type OnDragOverOptions = {
-  nearestNode: HTMLElement | null;
-  targetNode: HTMLElement;
+  nearestNode: DraggableElement | null;
+  targetNode: DraggableElement;
 };
+
+type UseBackwardTransitionEffectOptions = {
+  isDragging: boolean;
+  isIntersected: boolean;
+  activeDraggableID: ID;
+  transitionTimeout: number;
+  nodes: Array<DraggableElement>;
+};
+
+function useBackwardTransitionEffect(options: UseBackwardTransitionEffectOptions) {
+  const { isDragging, isIntersected, activeDraggableID, transitionTimeout, nodes } = options;
+
+  useEffect(() => {
+    if (isDragging || !isIntersected || nodes.length === 0) return;
+
+    for (const node of nodes) {
+      if (detectIsActiveDraggableNode(node, activeDraggableID)) continue;
+
+      setStyles(node, {
+        transform: `translate3D(0, 0, 0)`,
+      });
+
+      setTimeout(() => {
+        removeStyles(node, ['transition', 'transform']);
+      }, transitionTimeout);
+    }
+  }, [isDragging]);
+}
 
 type UseIntersectionEffectOptions = {
   isSomeDragging: boolean;
   isActiveGroup: boolean;
   isActive: boolean;
-  rootNode: HTMLElement;
+  rootNode: DraggableElement;
   contextID: number;
   activeDroppableID: ID;
   activeDraggableID: ID;
   unsubscribers: Array<() => void>;
-  onIntersect: (targetNode: HTMLElement, pointer: Pointer) => void;
+  onIntersect: (targetNode: DraggableElement, pointer: Pointer) => void;
 } & Required<Pick<DroppableProps, 'debounceTimeout'>>;
 
 function useIntersectionEffect(options: UseIntersectionEffectOptions) {
@@ -327,7 +346,7 @@ function useIntersectionEffect(options: UseIntersectionEffectOptions) {
         draggableRectLeft > droppableRectLeft && draggableRectLeft < droppableRectLeft + droppableRectWidth;
 
       if (isYaxesIntersected && isXaxesIntersected) {
-        const targetNode = e.target as HTMLElement;
+        const targetNode = e.target as DraggableElement;
         const pointer = createPointer(e);
 
         onIntersect(targetNode, pointer);
@@ -352,7 +371,7 @@ type UsePlaceholderEffectOptions = {
   isDragging: boolean;
   nodeWidth: number;
   nodeHeight: number;
-  container: HTMLElement;
+  container: DraggableElement;
   scope: DroppableScope;
   isIntersected: boolean;
   onInsertPlaceholder: () => void;
@@ -375,6 +394,7 @@ function usePlaceholderEffect(options: UsePlaceholderEffectOptions) {
     if (isDragging) {
       const placeholder = document.createElement('div');
       const inner = document.createElement('div');
+      const transition = `max-width ${transitionTimeout}ms ${transitionTimingFn}, max-height ${transitionTimeout}ms ${transitionTimingFn}`;
 
       placeholder.appendChild(inner);
       container.appendChild(placeholder);
@@ -396,7 +416,7 @@ function usePlaceholderEffect(options: UsePlaceholderEffectOptions) {
 
         requestAnimationFrame(() => {
           setStyles(placeholder, {
-            transition: `max-width ${transitionTimeout}ms ${transitionTimingFn}, max-height ${transitionTimeout}ms ${transitionTimingFn}`,
+            transition,
             maxWidth: `${nodeWidth}px`,
             maxHeight: `${nodeHeight}px`,
           });
@@ -413,7 +433,7 @@ function usePlaceholderEffect(options: UsePlaceholderEffectOptions) {
           placeholder.parentElement.removeChild(placeholder);
         } else {
           setStyles(placeholder, {
-            transition: `max-width ${transitionTimeout}ms ${transitionTimingFn}, max-height ${transitionTimeout}ms ${transitionTimingFn}`,
+            transition,
             maxWidth: `${nodeWidth}px`,
             maxHeight: `${nodeHeight}px`,
           });
@@ -440,13 +460,13 @@ function usePlaceholderEffect(options: UsePlaceholderEffectOptions) {
   }, [isDragging]);
 }
 
-type UseMoveSensorEffectOptions = {
+type UseDragMoveEffectOptions = {
   isDragging: boolean;
   unsubscribers: Array<() => void>;
   transformNodesByTargetOptions: Omit<TransformNodesByTargetOptions, 'targetNode' | 'pointer'>;
 };
 
-function useMoveSensorEffect(options: UseMoveSensorEffectOptions) {
+function useDragMoveEffect(options: UseDragMoveEffectOptions) {
   const { isDragging, unsubscribers, transformNodesByTargetOptions } = options;
   const scope = useMemo(() => ({ options: null }), []);
 
@@ -455,9 +475,9 @@ function useMoveSensorEffect(options: UseMoveSensorEffectOptions) {
   useLayoutEffect(() => {
     if (!isDragging) return;
 
-    const handleEvent = debounce((e: MouseEvent | TouchEvent) => {
+    const handleDragMoveEvent = debounce((e: MouseEvent | TouchEvent) => {
       if (e.target instanceof Document) return;
-      const targetNode = e.target as HTMLElement;
+      const targetNode = e.target as DraggableElement;
       const pointer = createPointer(e);
 
       transformNodesByTarget({
@@ -467,12 +487,12 @@ function useMoveSensorEffect(options: UseMoveSensorEffectOptions) {
       });
     });
 
-    document.addEventListener('mousemove', handleEvent);
-    document.addEventListener('touchmove', handleEvent);
+    document.addEventListener('mousemove', handleDragMoveEvent);
+    document.addEventListener('touchmove', handleDragMoveEvent);
 
     const unsubscribe = () => {
-      document.removeEventListener('mousemove', handleEvent);
-      document.removeEventListener('touchmove', handleEvent);
+      document.removeEventListener('mousemove', handleDragMoveEvent);
+      document.removeEventListener('touchmove', handleDragMoveEvent);
     };
 
     unsubscribers.push(unsubscribe);
@@ -481,18 +501,18 @@ function useMoveSensorEffect(options: UseMoveSensorEffectOptions) {
   }, [isDragging]);
 }
 
-type UseMoveEndSensorEffectOptions = {
+type UseDragEndEffectOptions = {
   direction: Direction;
   isDragging: boolean;
   contextID: number;
   activeDraggableID: ID;
   activeDroppableID: ID;
-  nearestNodeRef: React.MutableRefObject<HTMLElement>;
+  nearestNodeRef: React.MutableRefObject<DraggableElement>;
   unsubscribers: Array<() => void>;
-  onDragEnd: (node: HTMLElement) => void;
+  onDragEnd: (node: DraggableElement) => void;
 } & Required<Pick<DroppableProps, 'transitionTimeout' | 'transitionTimingFn'>>;
 
-function useMoveEndSensorEffect(options: UseMoveEndSensorEffectOptions) {
+function useDragEndEffect(options: UseDragEndEffectOptions) {
   const {
     direction,
     isDragging,
@@ -509,7 +529,7 @@ function useMoveEndSensorEffect(options: UseMoveEndSensorEffectOptions) {
   useLayoutEffect(() => {
     if (!isDragging) return;
 
-    const handleEvent = () => {
+    const handleDragEndEvent = () => {
       unsubscribers.forEach(fn => fn());
       unsubscribers.splice(0, unsubscribers.length);
 
@@ -540,12 +560,12 @@ function useMoveEndSensorEffect(options: UseMoveEndSensorEffectOptions) {
       }
     };
 
-    document.addEventListener('mouseup', handleEvent);
-    document.addEventListener('touchend', handleEvent);
+    document.addEventListener('mouseup', handleDragEndEvent);
+    document.addEventListener('touchend', handleDragEndEvent);
 
     const unsubscribe = () => {
-      document.removeEventListener('mouseup', handleEvent);
-      document.removeEventListener('touchend', handleEvent);
+      document.removeEventListener('mouseup', handleDragEndEvent);
+      document.removeEventListener('touchend', handleDragEndEvent);
     };
 
     unsubscribers.push(unsubscribe);
@@ -558,9 +578,9 @@ type ApplyTargetNodeTransitionOptions = {
   direction: Direction;
   contextID: number;
   activeDroppableID: ID;
-  targetNode: HTMLElement;
-  nearestNode: HTMLElement | null;
-  onComplete: (targetNode: HTMLElement) => void;
+  targetNode: DraggableElement;
+  nearestNode: DraggableElement | null;
+  onComplete: (targetNode: DraggableElement) => void;
 } & Required<Pick<DroppableProps, 'transitionTimeout' | 'transitionTimingFn'>>;
 
 const applyTargetNodeTransition = (options: ApplyTargetNodeTransitionOptions) => {
@@ -643,13 +663,13 @@ const applyTargetNodeTransition = (options: ApplyTargetNodeTransitionOptions) =>
 
 type TransformNodesByTargetOptions = {
   direction: Direction;
-  targetNode: HTMLElement;
+  targetNode: DraggableElement;
   pointer: Pointer;
-  nodes: Array<HTMLElement>;
+  nodes: Array<DraggableElement>;
   activeDraggableID: ID;
   nodeHeight: number;
   nodeWidth: number;
-  onMarkNearestNode?: (nearestNode: HTMLElement, targetNode: HTMLElement) => void;
+  onMarkNearestNode?: (nearestNode: DraggableElement, targetNode: DraggableElement) => void;
 } & Pick<DroppableProps, 'transitionTimeout' | 'transitionTimingFn'>;
 
 const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
@@ -666,7 +686,7 @@ const transformNodesByTarget = (options: TransformNodesByTargetOptions) => {
     onMarkNearestNode = () => {},
   } = options;
   const targetRect = targetNode.getBoundingClientRect();
-  let nearestNode: HTMLElement = null;
+  let nearestNode: DraggableElement = null;
   let minimalDiff = Infinity;
   const fns: Array<() => void> = [];
 

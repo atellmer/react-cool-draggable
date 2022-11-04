@@ -1,6 +1,6 @@
 import React, { useReducer, createContext, useMemo, useContext } from 'react';
 
-import type { ID } from './types';
+import type { ID, DraggableElement } from './types';
 
 export type DragDropContextProps = {
   onDragEnd: (options: OnDragEndOptions) => void;
@@ -57,7 +57,7 @@ type ContextState = {
   activeDraggableID: ID;
   nodeWidth: number;
   nodeHeight: number;
-  scrollContainer: HTMLElement;
+  scrollContainer: DraggableElement;
   unsubscribers: Array<() => void>;
   onComplete: () => void;
   onInsertPlaceholder: () => void;
@@ -106,7 +106,7 @@ export type OnDragEndOptions = {
   sourceIdx: number;
   destinationIdx: number;
   isMoving: boolean;
-  targetNode: HTMLElement;
+  targetNode: DraggableElement;
 };
 
 export { DragDropContext, useDragDropContext };

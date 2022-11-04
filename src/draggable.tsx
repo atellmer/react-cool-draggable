@@ -1,5 +1,6 @@
 import React, { useRef, useMemo, useLayoutEffect, memo } from 'react';
 
+import type { ID, Pointer, Coordinates, DraggableElement } from './types';
 import { useDragDropContext, type DragDropContextValue } from './context';
 import { useDroppableContext, transformNodesByTarget } from './droppable';
 import {
@@ -14,7 +15,6 @@ import {
   getItemNodes,
   createPointer,
 } from './utils';
-import type { ID, Pointer, Coordinates } from './types';
 
 export type DraggableProps = {
   draggableID: ID;
@@ -41,7 +41,7 @@ const DraggableInner: React.FC<DraggableInnerProps> = memo(
     const { state, mergeState } = dragDropContext;
     const { droppableID, droppableGroupID, direction, disabled } = useDroppableContext();
     const { contextID, scrollContainer } = state;
-    const rootRef = useRef<HTMLDivElement>(null);
+    const rootRef = useRef<DraggableElement>(null);
     const isActive = state.isDragging && state.activeDraggableID === draggableID;
     const scope = useMemo<DraggableScope>(() => ({ removeSensor: null, scrollContainer: null }), []);
 
@@ -65,8 +65,8 @@ const DraggableInner: React.FC<DraggableInnerProps> = memo(
         if (moveEvent.target instanceof Document) return;
         const movePointer = createPointer(moveEvent);
 
-        applyMoveSensor({
-          node: targetNode,
+        syncMove({
+          targetNode,
           scrollContainer: scope.scrollContainer,
           startPointer,
           movePointer,
@@ -129,8 +129,8 @@ const DraggableInner: React.FC<DraggableInnerProps> = memo(
         if (moveEvent.target instanceof Document) return;
         const movePointer = createPointer(moveEvent);
 
-        applyMoveSensor({
-          node: targetNode,
+        syncMove({
+          targetNode,
           scrollContainer: scope.scrollContainer,
           startPointer,
           movePointer,
@@ -229,45 +229,54 @@ export type DraggableChildrenOptions = {
 
 type DraggableScope = {
   removeSensor: () => void;
-  scrollContainer: HTMLElement;
+  scrollContainer: DraggableElement;
 };
 
-type ApplyMoveSensorOptions = {
-  node: HTMLElement;
+type SyncMoveOptions = {
+  targetNode: DraggableElement;
   startPointer: Pointer;
   movePointer: Pointer;
-  scrollContainer: HTMLElement;
+  scrollContainer: DraggableElement;
 };
 
-function applyMoveSensor(options: ApplyMoveSensorOptions) {
-  const { node, startPointer, movePointer, scrollContainer } = options;
+function syncMove(options: SyncMoveOptions) {
+  const { targetNode, startPointer, movePointer, scrollContainer } = options;
   const { x, y } = getCoordinates({ movePointer, startPointer });
 
-  transformNodePosition(node, { x, y });
-
+  transformNodePosition(targetNode, { x, y });
   requestAnimationFrame(() => {
-    const isRoot = scrollContainer === document.body;
-    const element = isRoot ? window : scrollContainer;
-    const velocity = 1000;
-
-    if (movePointer.clientY > window.innerHeight || movePointer.clientY < 0) {
-      const shift = isRoot ? window.scrollY : scrollContainer.scrollTop;
-
-      element.scroll({
-        top: movePointer.clientY > 0 ? movePointer.clientY + shift : movePointer.clientY + shift - velocity,
-        behavior: 'smooth',
-      });
-    }
-
-    if (movePointer.clientX > window.innerWidth || movePointer.clientX < 0) {
-      const shift = isRoot ? window.scrollX : scrollContainer.scrollLeft;
-
-      element.scroll({
-        left: movePointer.clientX > 0 ? movePointer.clientX + shift : movePointer.clientX + shift - velocity,
-        behavior: 'smooth',
-      });
-    }
+    syncScroll({ movePointer, scrollContainer });
   });
+}
+
+type SyncScrollOptions = {
+  movePointer: Pointer;
+  scrollContainer: DraggableElement;
+};
+
+function syncScroll(options: SyncScrollOptions) {
+  const { movePointer, scrollContainer } = options;
+  const isRoot = scrollContainer === document.body;
+  const element = isRoot ? window : scrollContainer;
+  const velocity = 1000;
+
+  if (movePointer.clientY > window.innerHeight || movePointer.clientY < 0) {
+    const shift = isRoot ? window.scrollY : scrollContainer.scrollTop;
+
+    element.scroll({
+      top: movePointer.clientY > 0 ? movePointer.clientY + shift : movePointer.clientY + shift - velocity,
+      behavior: 'smooth',
+    });
+  }
+
+  if (movePointer.clientX > window.innerWidth || movePointer.clientX < 0) {
+    const shift = isRoot ? window.scrollX : scrollContainer.scrollLeft;
+
+    element.scroll({
+      left: movePointer.clientX > 0 ? movePointer.clientX + shift : movePointer.clientX + shift - velocity,
+      behavior: 'smooth',
+    });
+  }
 }
 
 type GetCoordinatesOptions = {
@@ -286,7 +295,7 @@ function getCoordinates(options: GetCoordinatesOptions): Coordinates {
   };
 }
 
-function setNodeDragStyles(node: HTMLElement, rect: DOMRect) {
+function setNodeDragStyles(node: DraggableElement, rect: DOMRect) {
   const style = window.getComputedStyle(node);
   const marginTop = parseInt(style.marginTop);
   const marginLeft = parseInt(style.marginLeft);
@@ -305,13 +314,13 @@ function setNodeDragStyles(node: HTMLElement, rect: DOMRect) {
   });
 }
 
-function transformNodePosition(node: HTMLElement, { x, y }: Coordinates) {
+function transformNodePosition(node: DraggableElement, { x, y }: Coordinates) {
   setStyles(node, {
     transform: `translate3D(${x}px, ${y}px, 0px)`,
   });
 }
 
-function removeNodeStyles(node: HTMLElement) {
+function removeNodeStyles(node: DraggableElement) {
   removeStyles(node, [
     'position',
     'top',
