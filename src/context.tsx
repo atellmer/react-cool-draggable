@@ -1,6 +1,7 @@
-import React, { useReducer, createContext, useMemo, useContext } from 'react';
+import React, { useReducer, createContext, useMemo, useContext, useEffect } from 'react';
 
 import type { ID, DraggableElement } from './types';
+import { GLOBAL_STYLE, DRAGGABLE_HANDLER_ATTR } from './utils';
 
 export type DragDropContextProps = {
   onDragEnd: (options: OnDragEndOptions) => void;
@@ -38,8 +39,29 @@ const DragDropContext: React.FC<DragDropContextProps> = props => {
     };
   }, [state, onDragEnd]);
 
+  useGlobalStyleEffect();
+
   return <Context.Provider value={value}>{children}</Context.Provider>;
 };
+
+function useGlobalStyleEffect() {
+  useEffect(() => {
+    const style = document.createElement('style');
+
+    style.setAttribute(GLOBAL_STYLE, 'true');
+    style.textContent = `
+      [${DRAGGABLE_HANDLER_ATTR}] {
+        touch-action: none;
+      }
+    `;
+
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+}
 
 export type DragDropContextValue = {
   state: ContextState;

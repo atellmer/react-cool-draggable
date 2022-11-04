@@ -3,6 +3,8 @@ import type { ID, Pointer, DraggableElement } from './types';
 const CONTEXT_ID_ATTR = 'data-dnd-context-id';
 const DROPPABLE_ID_ATTR = 'data-dnd-droppable-id';
 const DRAGGABLE_ID_ATTR = 'data-dnd-draggable-id';
+const DRAGGABLE_HANDLER_ATTR = 'data-dnd-draggable-handler';
+const GLOBAL_STYLE = 'data-dnd-global-style';
 
 function setStyles(node: DraggableElement, style: Record<string, string | number>) {
   const namesMap = {
@@ -112,22 +114,6 @@ function getThreshold(rect: DOMRect, pointer: Pointer) {
   };
 }
 
-function blockScroll(node: DraggableElement) {
-  const overflowValue = node.style.getPropertyValue('overflow');
-
-  node.style.setProperty('overflow', 'hidden');
-
-  return () => {
-    if (overflowValue) {
-      node.style.setProperty('overflow', overflowValue);
-    } else {
-      node.style.removeProperty('overflow');
-    }
-
-    removeStyleAttrIfEmpty(node);
-  };
-}
-
 function removeStyleAttrIfEmpty(node: DraggableElement) {
   if (!node.getAttribute('style')) {
     node.removeAttribute('style');
@@ -165,6 +151,8 @@ export {
   CONTEXT_ID_ATTR,
   DROPPABLE_ID_ATTR,
   DRAGGABLE_ID_ATTR,
+  DRAGGABLE_HANDLER_ATTR,
+  GLOBAL_STYLE,
   setStyles,
   removeStyles,
   getItemNodes,
@@ -176,7 +164,6 @@ export {
   getNodeSize,
   safeNumber,
   getThreshold,
-  blockScroll,
   createBooleanMap,
   debounce,
   createPointer,

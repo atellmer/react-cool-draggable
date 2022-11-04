@@ -7,11 +7,11 @@ import {
   CONTEXT_ID_ATTR,
   DROPPABLE_ID_ATTR,
   DRAGGABLE_ID_ATTR,
+  DRAGGABLE_HANDLER_ATTR,
   setStyles,
   removeStyles,
   getScrollContainer,
   getNodeSize,
-  blockScroll,
   getItemNodes,
   createPointer,
 } from './utils';
@@ -49,32 +49,34 @@ const DraggableInner: React.FC<DraggableInnerProps> = memo(
 
     useLayoutEffect(() => () => scope.removeSensor && scope.removeSensor(), []);
 
-    const handleMouseDown = (startEvent: React.MouseEvent) => {
-      if (disabled || startEvent.buttons !== 1 || state.onComplete) return;
+    const handleStartEvent = (startEvent: React.MouseEvent | React.TouchEvent) => {
+      if (disabled || state.onComplete) return;
+      const isMouseEvent = startEvent.nativeEvent instanceof MouseEvent;
+      const mouseEvent = startEvent as React.MouseEvent;
 
+      if (isMouseEvent && mouseEvent.buttons !== 1) return;
+
+      const moveEventName = isMouseEvent ? 'mousemove' : 'touchmove';
       const targetNode = rootRef.current;
-      const rect = targetNode.getBoundingClientRect();
+      const targetRect = targetNode.getBoundingClientRect();
       const scrollContainer = getScrollContainer(targetNode);
-      const { nodeWidth, nodeHeight } = getNodeSize(targetNode, rect);
-      const startPointer: Pointer = {
-        clientX: startEvent.clientX,
-        clientY: startEvent.clientY,
-      };
+      const { nodeWidth, nodeHeight } = getNodeSize(targetNode, targetRect);
+      const startPointer = createPointer(startEvent.nativeEvent);
 
-      const handleMoveEvent = (moveEvent: MouseEvent) => {
+      const handleDragMove = (moveEvent: MouseEvent | TouchEvent) => {
         if (moveEvent.target instanceof Document) return;
         const movePointer = createPointer(moveEvent);
 
         syncMove({
           targetNode,
-          scrollContainer: scope.scrollContainer,
           startPointer,
           movePointer,
+          scrollContainer: scope.scrollContainer,
         });
       };
 
       const removeSensor = () => {
-        document.removeEventListener('mousemove', handleMoveEvent);
+        document.removeEventListener(moveEventName, handleDragMove);
       };
 
       const handleComplete = () => removeNodeStyles(targetNode);
@@ -91,7 +93,7 @@ const DraggableInner: React.FC<DraggableInnerProps> = memo(
         });
       };
 
-      setNodeDragStyles(targetNode, rect);
+      setNodeDragStyles(targetNode, targetRect);
       mergeState({
         isDragging: true,
         activeDroppableID: droppableID,
@@ -109,85 +111,7 @@ const DraggableInner: React.FC<DraggableInnerProps> = memo(
         removeSensor();
         scope.removeSensor = null;
       };
-      document.addEventListener('mousemove', handleMoveEvent);
-    };
-
-    const handleTouchStart = (startEvent: React.TouchEvent) => {
-      if (disabled || state.onComplete) return;
-
-      const targetNode = rootRef.current;
-      const rect = targetNode.getBoundingClientRect();
-      const scrollContainer = getScrollContainer(targetNode);
-      const { nodeWidth, nodeHeight } = getNodeSize(targetNode, rect);
-      const startPointer: Pointer = {
-        clientX: startEvent.touches[0].clientX,
-        clientY: startEvent.touches[0].clientY,
-      };
-      const unblockScroll = blockScroll(document.body);
-
-      const handleEvent = (moveEvent: TouchEvent) => {
-        if (moveEvent.target instanceof Document) return;
-        const movePointer = createPointer(moveEvent);
-
-        syncMove({
-          targetNode,
-          scrollContainer: scope.scrollContainer,
-          startPointer,
-          movePointer,
-        });
-      };
-
-      const removeSensor = () => {
-        document.removeEventListener('touchmove', handleEvent);
-      };
-
-      const handleComplete = () => {
-        removeNodeStyles(targetNode);
-        unblockScroll();
-      };
-
-      const handleInsertPlaceholder = () => {
-        transformNodesByTarget({
-          direction,
-          targetNode,
-          nodeWidth,
-          nodeHeight,
-          pointer: startPointer,
-          activeDraggableID: draggableID,
-          nodes: getItemNodes(contextID, droppableID),
-        });
-      };
-
-      setNodeDragStyles(targetNode, rect);
-
-      transformNodesByTarget({
-        targetNode,
-        direction,
-        nodeWidth,
-        nodeHeight,
-        pointer: startPointer,
-        activeDraggableID: draggableID,
-        nodes: getItemNodes(contextID, droppableID),
-      });
-
-      mergeState({
-        isDragging: true,
-        activeDroppableID: droppableID,
-        activeDroppableGroupID: droppableGroupID,
-        activeDraggableID: draggableID,
-        nodeWidth,
-        nodeHeight,
-        scrollContainer,
-        unsubscribers: [removeSensor],
-        onComplete: handleComplete,
-        onInsertPlaceholder: handleInsertPlaceholder,
-      });
-
-      scope.removeSensor = () => {
-        removeSensor();
-        scope.removeSensor = null;
-      };
-      document.addEventListener('touchmove', handleEvent);
+      document.addEventListener(moveEventName, handleDragMove);
     };
 
     return children({
@@ -199,8 +123,9 @@ const DraggableInner: React.FC<DraggableInnerProps> = memo(
         [DRAGGABLE_ID_ATTR]: draggableID,
       },
       draggableProps: {
-        onMouseDown: handleMouseDown,
-        onTouchStart: handleTouchStart,
+        [DRAGGABLE_HANDLER_ATTR]: true,
+        onMouseDown: handleStartEvent,
+        onTouchStart: handleStartEvent,
       },
       snapshot: {
         isDragging: isActive,
@@ -219,6 +144,7 @@ export type DraggableChildrenOptions = {
     [DRAGGABLE_ID_ATTR]: ID;
   };
   draggableProps: {
+    [DRAGGABLE_HANDLER_ATTR]: true;
     onMouseDown: (e: React.MouseEvent) => void;
     onTouchStart: (e: React.TouchEvent) => void;
   };

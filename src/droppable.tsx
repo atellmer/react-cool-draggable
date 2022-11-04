@@ -326,7 +326,7 @@ function useIntersectionEffect(options: UseIntersectionEffectOptions) {
 
   useEffect(() => {
     if (!isSomeDragging) return;
-    const handleEvent = debounce((e: MouseEvent | TouchEvent) => {
+    const handleDragMove = debounce((e: MouseEvent | TouchEvent) => {
       if (e.target instanceof Document) return;
       if (!isSomeDragging) return;
       if (!isActiveGroup) return;
@@ -353,12 +353,12 @@ function useIntersectionEffect(options: UseIntersectionEffectOptions) {
       }
     }, debounceTimeout);
 
-    document.addEventListener('mousemove', handleEvent);
-    document.addEventListener('touchmove', handleEvent);
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('touchmove', handleDragMove);
 
     const unsubscribe = () => {
-      document.removeEventListener('mousemove', handleEvent);
-      document.removeEventListener('touchmove', handleEvent);
+      document.removeEventListener('mousemove', handleDragMove);
+      document.removeEventListener('touchmove', handleDragMove);
     };
 
     unsubscribers.push(unsubscribe);
@@ -475,7 +475,7 @@ function useDragMoveEffect(options: UseDragMoveEffectOptions) {
   useLayoutEffect(() => {
     if (!isDragging) return;
 
-    const handleDragMoveEvent = debounce((e: MouseEvent | TouchEvent) => {
+    const handleDragMove = debounce((e: MouseEvent | TouchEvent) => {
       if (e.target instanceof Document) return;
       const targetNode = e.target as DraggableElement;
       const pointer = createPointer(e);
@@ -487,12 +487,12 @@ function useDragMoveEffect(options: UseDragMoveEffectOptions) {
       });
     });
 
-    document.addEventListener('mousemove', handleDragMoveEvent);
-    document.addEventListener('touchmove', handleDragMoveEvent);
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('touchmove', handleDragMove);
 
     const unsubscribe = () => {
-      document.removeEventListener('mousemove', handleDragMoveEvent);
-      document.removeEventListener('touchmove', handleDragMoveEvent);
+      document.removeEventListener('mousemove', handleDragMove);
+      document.removeEventListener('touchmove', handleDragMove);
     };
 
     unsubscribers.push(unsubscribe);
@@ -529,7 +529,7 @@ function useDragEndEffect(options: UseDragEndEffectOptions) {
   useLayoutEffect(() => {
     if (!isDragging) return;
 
-    const handleDragEndEvent = () => {
+    const handleDragEnd = () => {
       unsubscribers.forEach(fn => fn());
       unsubscribers.splice(0, unsubscribers.length);
 
@@ -560,12 +560,12 @@ function useDragEndEffect(options: UseDragEndEffectOptions) {
       }
     };
 
-    document.addEventListener('mouseup', handleDragEndEvent);
-    document.addEventListener('touchend', handleDragEndEvent);
+    document.addEventListener('mouseup', handleDragEnd);
+    document.addEventListener('touchend', handleDragEnd);
 
     const unsubscribe = () => {
-      document.removeEventListener('mouseup', handleDragEndEvent);
-      document.removeEventListener('touchend', handleDragEndEvent);
+      document.removeEventListener('mouseup', handleDragEnd);
+      document.removeEventListener('touchend', handleDragEnd);
     };
 
     unsubscribers.push(unsubscribe);
