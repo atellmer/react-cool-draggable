@@ -22,10 +22,12 @@ export type DraggableProps = {
 };
 
 const Draggable: React.FC<DraggableProps> = props => {
+  const { draggableID } = props;
   const dragDropContext = useDragDropContext();
   const { state } = dragDropContext;
-  const { isDragging, activeDroppableID } = state;
-  const updatingKey = `${isDragging}:${activeDroppableID}`;
+  const { isDragging, activeDraggableID } = state;
+  const isActive = draggableID === activeDraggableID;
+  const updatingKey = `${isDragging}:${isActive}`;
 
   return <DraggableInner {...props} updatingKey={updatingKey} dragDropContext={dragDropContext} />;
 };
