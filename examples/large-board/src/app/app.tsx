@@ -98,7 +98,7 @@ const TrelloApp: React.FC = () => {
                               droppableID={groupKey}
                               droppableGroupID='columns'
                               transitionTimeout={200}
-                              debounceTimeout={50}>
+                              debounceTimeout={0}>
                               {({ snapshot, ...rest }) => {
                                 return (
                                   <>
