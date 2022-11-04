@@ -9,7 +9,7 @@ Drag-n-drop react library (component) for horizontal and vertical lists.
 - 🚀 60 FPS performance
 - 🎢 Animated transitions
 - 💅 Сustomizable appearance
-- 📱 Touch devices support
+- 🙃 Touch devices support
 - 📏 Any element sizes
 - ✔️ No dependencies
 
