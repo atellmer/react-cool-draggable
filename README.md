@@ -75,6 +75,15 @@ const handleDragEnd = options => {
 You can also combine and nest droppable and draggable elements to create more complex components if you need to.
 
 ## API
+Some universal types here
+```tsx
+type ID = string | number;
+
+type Direction = 'vertical' | 'horizontal';
+
+type DraggableElement = HTMLElement | SVGElement;
+```
+
 ### DragDropContext
 
 This library uses the react context as a way to communicate between children in the tree, so the context must be explicitly invoked at the root of the component. The context has one callback onDragEnd that is called when the user drops the element.
@@ -91,24 +100,42 @@ import { DragDropContext } from 'react-cool-draggable';
 
 ```tsx
 type DragDropContextProps = {
+  onDragStart?: (options: OnDragStartOptions) => void;
+  onDragOver?: (options: OnDragOverOptions) => void;
   onDragEnd: (options: OnDragEndOptions) => void;
-  children: React.ReactNode;
+  children: React.ReactElement;
 };
 ```
 
-The onDragEnd callback accepts a number of options that may be useful to you later.
+All of these callback accept a number of options that may be useful to you later.
 
 ```tsx
+type OnDragStartOptions = {
+  draggableID: ID;
+  droppableID: ID;
+  droppableGroupID: ID;
+  targetNode: DraggableElement;
+};
+
+type OnDragOverOptions = {
+  draggableID: ID;
+  droppableID: ID;
+  droppableGroupID: ID;
+  targetNode: DraggableElement;
+  nearestNode: DraggableElement | null;
+};
+
 type OnDragEndOptions = {
-  draggableID: string | number;
-  droppableID: string | number;
-  droppableGroupID: string | number;
+  draggableID: ID;
+  droppableID: ID;
+  droppableGroupID: ID;
   sourceIdx: number;
   destinationIdx: number;
   isMoving: boolean;
-  targetNode: HTMLElement;
+  targetNode: DraggableElement;
 };
 ```
+
 ### Droppable
 Think of this component as a surface on which elements move. It is simple logic where all the logic is hidden. At the same time, it is based on the concept of RenderProps and expects to receive a render function as children.
 
@@ -127,14 +154,13 @@ import { Droppable } from 'react-cool-draggable';
 
 ```tsx
 type DroppableProps = {
-  direction: 'horizontal' | 'vertical';
-  droppableID: string | number;
-  droppableGroupID: string | number;
+  direction: Direction;
+  droppableID: ID;
+  droppableGroupID: ID;
   transitionTimeout?: number;
   transitionTimingFn?: string;
   disabled?: boolean;
   debounceTimeout?: number;
-  onDragOver?: (options: OnDragOverOptions) => void;
   children: (options: DroppableChildrenOptions) => React.ReactElement;
 };
 ```
@@ -151,15 +177,6 @@ type DroppableChildrenOptions = {
 ```
 
 The snapshot can be useful for you to understand and react to real-time dragging, such as changing the surface color to let the user know that the dragging mode has been activated.
-
-```tsx
-type OnDragOverOptions = {
-  nearestNode: HTMLElement | null;
-  targetNode: HTMLElement;
-};
-```
-
-Also, in some cases you may want to track the progress of the move in the onDragOver callback.
 
 ### Draggable
 
@@ -178,7 +195,7 @@ import { Draggable } from 'react-cool-draggable';
 
 ```tsx
 type DraggableProps = {
-  draggableID: string | number;
+  draggableID: ID;
   children: (options: DraggableChildrenOptions) => React.ReactElement;
 };
 ```

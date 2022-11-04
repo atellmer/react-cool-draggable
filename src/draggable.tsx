@@ -38,7 +38,7 @@ type DraggableInnerProps = {
 const DraggableInner: React.FC<DraggableInnerProps> = memo(
   props => {
     const { draggableID, dragDropContext, children } = props;
-    const { state, mergeState } = dragDropContext;
+    const { state, mergeState, onDragStart } = dragDropContext;
     const { droppableID, droppableGroupID, direction, disabled } = useDroppableContext();
     const { contextID, scrollContainer } = state;
     const rootRef = useRef<DraggableElement>(null);
@@ -62,6 +62,13 @@ const DraggableInner: React.FC<DraggableInnerProps> = memo(
       const scrollContainer = getScrollContainer(targetNode);
       const { nodeWidth, nodeHeight } = getNodeSize(targetNode, targetRect);
       const startPointer = createPointer(startEvent.nativeEvent);
+
+      onDragStart({
+        targetNode,
+        draggableID,
+        droppableID,
+        droppableGroupID,
+      });
 
       const handleDragMove = (moveEvent: MouseEvent | TouchEvent) => {
         if (moveEvent.target instanceof Document) return;

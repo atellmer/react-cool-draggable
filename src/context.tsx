@@ -4,12 +4,14 @@ import type { ID, DraggableElement } from './types';
 import { GLOBAL_STYLE, DRAGGABLE_HANDLER_ATTR } from './utils';
 
 export type DragDropContextProps = {
+  onDragStart?: (options: OnDragStartOptions) => void;
+  onDragOver?: (options: OnDragOverOptions) => void;
   onDragEnd: (options: OnDragEndOptions) => void;
-  children: React.ReactNode;
+  children: React.ReactElement;
 };
 
 const DragDropContext: React.FC<DragDropContextProps> = props => {
-  const { children, onDragEnd } = props;
+  const { children, onDragStart, onDragOver, onDragEnd } = props;
   const contextID = useMemo(() => getNextContextID(), []);
   const [state, dispatch] = useReducer(reducer, inititalState);
   const mergeState = (value: Partial<ContextState>) => dispatch({ value });
@@ -28,13 +30,15 @@ const DragDropContext: React.FC<DragDropContextProps> = props => {
       onInsertPlaceholder: null,
     });
   };
-  const value = useMemo(() => {
+  const value = useMemo<DragDropContextValue>(() => {
     state.contextID = contextID;
 
     return {
       state,
       mergeState,
       resetState,
+      onDragStart,
+      onDragOver,
       onDragEnd,
     };
   }, [state, onDragEnd]);
@@ -42,6 +46,11 @@ const DragDropContext: React.FC<DragDropContextProps> = props => {
   useGlobalStyleEffect();
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
+};
+
+DragDropContext.defaultProps = {
+  onDragStart: () => {},
+  onDragOver: () => {},
 };
 
 function useGlobalStyleEffect() {
@@ -68,7 +77,7 @@ export type DragDropContextValue = {
   mergeState: (state: Partial<ContextState>) => void;
   resetState: () => void;
   onDragEnd: (options: OnDragEndOptions) => void;
-};
+} & Required<Pick<DragDropContextProps, 'onDragStart' | 'onDragOver' | 'onDragEnd'>>;
 
 type ContextState = {
   isDragging: boolean;
@@ -121,14 +130,23 @@ function useDragDropContext() {
   return value;
 }
 
-export type OnDragEndOptions = {
+type CallbackShared = {
   draggableID: ID;
   droppableID: ID;
   droppableGroupID: ID;
+  targetNode: DraggableElement;
+};
+
+export type OnDragStartOptions = {} & CallbackShared;
+
+export type OnDragOverOptions = {
+  nearestNode: DraggableElement | null;
+} & CallbackShared;
+
+export type OnDragEndOptions = {
   sourceIdx: number;
   destinationIdx: number;
   isMoving: boolean;
-  targetNode: DraggableElement;
-};
+} & CallbackShared;
 
 export { DragDropContext, useDragDropContext };

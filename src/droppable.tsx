@@ -27,7 +27,6 @@ export type DroppableProps = {
   disabled?: boolean;
   debounceTimeout?: number;
   children: (options: DroppableChildrenOptions) => React.ReactElement;
-  onDragOver?: (options: OnDragOverOptions) => void;
 };
 
 const Droppable: React.FC<DroppableProps> = props => {
@@ -56,9 +55,8 @@ const DroppableInner: React.FC<DroppableInnerProps> = memo(
       disabled,
       dragDropContext,
       children,
-      onDragOver,
     } = props;
-    const { state, mergeState, resetState, onDragEnd } = dragDropContext;
+    const { state, mergeState, resetState, onDragOver, onDragEnd } = dragDropContext;
     const {
       isDragging: isSomeDragging,
       contextID,
@@ -156,7 +154,13 @@ const DroppableInner: React.FC<DroppableInnerProps> = memo(
               nodes: getItemNodes(contextID, droppableID),
               onMarkNearestNode: (nearestNode, targetNode) => {
                 nearestNodeRef.current = nearestNode || null;
-                onDragOver({ nearestNode, targetNode });
+                onDragOver({
+                  draggableID: activeDraggableID,
+                  droppableID: activeDroppableID,
+                  droppableGroupID: activeDroppableGroupID,
+                  nearestNode,
+                  targetNode,
+                });
               },
             });
           },
@@ -189,7 +193,13 @@ const DroppableInner: React.FC<DroppableInnerProps> = memo(
         transitionTimingFn,
         onMarkNearestNode: (nearestNode, targetNode) => {
           nearestNodeRef.current = nearestNode || null;
-          onDragOver({ nearestNode, targetNode });
+          onDragOver({
+            draggableID: activeDraggableID,
+            droppableID: activeDroppableID,
+            droppableGroupID: activeDroppableGroupID,
+            nearestNode,
+            targetNode,
+          });
         },
       },
     });
@@ -238,7 +248,6 @@ Droppable.defaultProps = {
   transitionTimeout: 200,
   transitionTimingFn: 'ease-in-out',
   debounceTimeout: 0,
-  onDragOver: () => {},
 };
 
 type DroppableScope = {
@@ -263,11 +272,6 @@ export type DroppableChildrenOptions = {
     isDragging: boolean;
   };
   onDragStart: React.DragEventHandler;
-};
-
-export type OnDragOverOptions = {
-  nearestNode: DraggableElement | null;
-  targetNode: DraggableElement;
 };
 
 type UseBackwardTransitionEffectOptions = {

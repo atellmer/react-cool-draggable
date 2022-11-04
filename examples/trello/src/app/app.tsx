@@ -79,7 +79,7 @@ const TrelloApp: React.FC = () => {
   return (
     <Root>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableID='columns' droppableGroupID='board' direction='horizontal'>
+        <Droppable direction='horizontal' droppableID='columns' droppableGroupID='board'>
           {({ snapshot: columnsSnapshot, ...rest }) => {
             return (
               <DroppableBoardContent isDragging={columnsSnapshot.isDragging} {...rest}>
