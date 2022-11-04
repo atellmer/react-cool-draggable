@@ -95,7 +95,6 @@ const DraggableContent = styled.div<SnapshotProps>`
 const CardContentLayout = styled.div`
   background-color: #eee;
   padding: 10px;
-  transition: background-color 0.2s ease-in-out;
 `;
 
 const CardContent = styled.div`
