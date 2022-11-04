@@ -1957,9 +1957,9 @@ randomfill@^1.0.3:
     randombytes "^2.0.5"
     safe-buffer "^5.1.0"
 
-react-cool-draggable@^0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/react-cool-draggable/-/react-cool-draggable-0.0.3.tgz#f64b377a561af34bb4ba987f44f912fa60061bed"
+react-cool-draggable@0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/react-cool-draggable/-/react-cool-draggable-0.1.0.tgz#656fb6861dbc0cbbdb192db33db599883f6d4a75"
 
 react-dom@^18.2.0:
   version "18.2.0"
