@@ -194,21 +194,19 @@ function syncScroll(options: SyncScrollOptions) {
   const isRoot = scrollContainer === document.body;
   const element = isRoot ? window : scrollContainer;
   const velocity = 1000;
+  const delta = 50;
+  const isTop = window.innerHeight - movePointer.clientY <= delta;
+  const isBottom = movePointer.clientY <= delta;
+  const isRight = window.innerWidth - movePointer.clientX <= delta;
+  const isLeft = movePointer.clientX <= delta;
 
-  if (movePointer.clientY > window.innerHeight || movePointer.clientY < 0) {
-    const shift = isRoot ? window.scrollY : scrollContainer.scrollTop;
-
-    element.scroll({
-      top: movePointer.clientY > 0 ? movePointer.clientY + shift : movePointer.clientY + shift - velocity,
-      behavior: 'smooth',
-    });
-  }
-
-  if (movePointer.clientX > window.innerWidth || movePointer.clientX < 0) {
-    const shift = isRoot ? window.scrollX : scrollContainer.scrollLeft;
+  if (isTop || isBottom || isRight || isLeft) {
+    const dy = isRoot ? window.scrollY : scrollContainer.scrollTop;
+    const dx = isRoot ? window.scrollX : scrollContainer.scrollLeft;
 
     element.scroll({
-      left: movePointer.clientX > 0 ? movePointer.clientX + shift : movePointer.clientX + shift - velocity,
+      top: isTop ? dy + velocity : isBottom ? dy - velocity : dy,
+      left: isRight ? dx + velocity : isLeft ? dx - velocity : dx,
       behavior: 'smooth',
     });
   }

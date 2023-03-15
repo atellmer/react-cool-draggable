@@ -30,8 +30,8 @@ const createItems = (count: number, groupID: string) =>
     }));
 
 const TrelloApp: React.FC = () => {
-  const [columns, setColumns] = useState(['col-1', 'col-2', 'col-3', 'col-4', 'col-5']);
-  const [items, setItems] = useState([...flatten(columns.map(x => createItems(5, x)))]);
+  const [columns, setColumns] = useState(['col-1', 'col-2', 'col-3', 'col-4', 'col-5', 'col-6', 'col-7', 'col-8']);
+  const [items, setItems] = useState([...flatten(columns.map(x => createItems(10, x)))]);
   const groupedItems = groupBy(items, x => x.groupID);
 
   const handleDragEnd = (options: OnDragEndOptions) => {

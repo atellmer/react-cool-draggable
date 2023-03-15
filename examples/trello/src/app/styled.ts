@@ -4,19 +4,18 @@ type SnapshotProps = {
   isDragging?: boolean;
 };
 
-const Root = styled.div`
-  padding: 40px;
-`;
+const Root = styled.div``;
 
 const DroppableBoardContent = styled.div<SnapshotProps>`
   width: 100%;
+  max-height: 100vh;
   display: flex;
-  flex-direction: row;
+  flex-flow: row nowrap;
   border: 1px solid #ba68c8;
   overflow-anchor: none;
   transition: background-color 0.6s ease-in-out;
   padding: 10px;
-
+  overflow: auto;
   ${p =>
     p.isDragging &&
     css`
@@ -25,7 +24,8 @@ const DroppableBoardContent = styled.div<SnapshotProps>`
 `;
 
 const Column = styled.div`
-  flex: 1 1 25%;
+  width: 300px;
+  flex: 0 0 300px;
   margin: 10px;
 `;
 
@@ -38,7 +38,6 @@ const DraggableColumnHeader = styled.div<SnapshotProps>`
   color: #fff;
   padding: 8px;
   transition: background-color 0.6s ease-in-out;
-
   ${p =>
     p.isDragging &&
     css`
@@ -55,7 +54,6 @@ const DroppableContent = styled.div<SnapshotProps>`
   padding: 10px;
   background-color: #fff;
   min-height: 156px;
-
   ${p =>
     p.isDragging &&
     css`
@@ -72,7 +70,6 @@ const DraggableHeader = styled.div<SnapshotProps>`
   transition: background-color 0.2s ease-in-out;
   color: #fff;
   padding: 8px;
-
   ${p =>
     p.isDragging &&
     css`
@@ -84,7 +81,6 @@ const DraggableContent = styled.div<SnapshotProps>`
   border: 1px solid black;
   margin: 8px;
   transition: box-shadow 0.2s ease-in-out;
-
   ${p =>
     p.isDragging &&
     css`
@@ -95,6 +91,7 @@ const DraggableContent = styled.div<SnapshotProps>`
 const CardContentLayout = styled.div`
   background-color: #eee;
   padding: 10px;
+  transition: background-color 0.2s ease-in-out;
 `;
 
 const CardContent = styled.div`

@@ -1,6 +1,6 @@
 {
   "name": "react-cool-draggable",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": "AlexPlex",
   "description": "Drag-n-drop react library (component) for horizontal and vertical lists.",
   "license": "MIT",
