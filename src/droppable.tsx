@@ -332,7 +332,7 @@ function useIntersectionEffect(options: UseIntersectionEffectOptions) {
 
   useEffect(() => {
     if (!isSomeDragging) return;
-    const handleDragMove = debounce((e: MouseEvent | TouchEvent) => {
+    const handleDragMove = debounce((e: PointerEvent) => {
       if (e.target instanceof Document) return;
       if (!isSomeDragging) return;
       if (!isActiveGroup) return;
@@ -359,12 +359,10 @@ function useIntersectionEffect(options: UseIntersectionEffectOptions) {
       }
     }, debounceTimeout);
 
-    document.addEventListener('mousemove', handleDragMove);
-    document.addEventListener('touchmove', handleDragMove);
+    document.addEventListener('pointermove', handleDragMove);
 
     const unsubscribe = () => {
-      document.removeEventListener('mousemove', handleDragMove);
-      document.removeEventListener('touchmove', handleDragMove);
+      document.removeEventListener('pointermove', handleDragMove);
     };
 
     unsubscribers.push(unsubscribe);
@@ -481,24 +479,18 @@ function useDragMoveEffect(options: UseDragMoveEffectOptions) {
   useLayoutEffect(() => {
     if (!isDragging) return;
 
-    const handleDragMove = debounce((e: MouseEvent | TouchEvent) => {
+    const handleDragMove = debounce((e: PointerEvent) => {
       if (e.target instanceof Document) return;
       const targetNode = e.target as DraggableElement;
       const pointer = createPointer(e);
 
-      transformNodesByTarget({
-        ...scope.options,
-        targetNode,
-        pointer,
-      });
+      transformNodesByTarget({ ...scope.options, targetNode, pointer });
     });
 
-    document.addEventListener('mousemove', handleDragMove);
-    document.addEventListener('touchmove', handleDragMove);
+    document.addEventListener('pointermove', handleDragMove);
 
     const unsubscribe = () => {
-      document.removeEventListener('mousemove', handleDragMove);
-      document.removeEventListener('touchmove', handleDragMove);
+      document.removeEventListener('pointermove', handleDragMove);
     };
 
     unsubscribers.push(unsubscribe);
@@ -566,12 +558,10 @@ function useDragEndEffect(options: UseDragEndEffectOptions) {
       }
     };
 
-    document.addEventListener('mouseup', handleDragEnd);
-    document.addEventListener('touchend', handleDragEnd);
+    document.addEventListener('pointerup', handleDragEnd);
 
     const unsubscribe = () => {
-      document.removeEventListener('mouseup', handleDragEnd);
-      document.removeEventListener('touchend', handleDragEnd);
+      document.removeEventListener('pointerup', handleDragEnd);
     };
 
     unsubscribers.push(unsubscribe);

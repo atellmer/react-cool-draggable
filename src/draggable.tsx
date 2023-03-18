@@ -51,14 +51,8 @@ const DraggableInner: React.FC<DraggableInnerProps> = memo(
 
     useLayoutEffect(() => () => scope.removeSensor && scope.removeSensor(), []);
 
-    const handleStartEvent = (startEvent: React.MouseEvent | React.TouchEvent) => {
-      if (disabled || state.onComplete) return;
-      const isMouseEvent = startEvent.nativeEvent instanceof MouseEvent;
-      const mouseEvent = startEvent as React.MouseEvent;
-
-      if (isMouseEvent && mouseEvent.buttons !== 1) return;
-
-      const moveEventName = isMouseEvent ? 'mousemove' : 'touchmove';
+    const handleStartEvent = (startEvent: React.PointerEvent) => {
+      if (disabled || !startEvent.isPrimary || startEvent.buttons !== 1 || state.onComplete) return;
       const targetNode = rootRef.current;
       const targetRect = targetNode.getBoundingClientRect();
       const scrollContainer = getScrollContainer(targetNode);
@@ -72,7 +66,7 @@ const DraggableInner: React.FC<DraggableInnerProps> = memo(
         droppableGroupID,
       });
 
-      const handleDragMove = (moveEvent: MouseEvent | TouchEvent) => {
+      const handleDragMove = (moveEvent: PointerEvent) => {
         if (moveEvent.target instanceof Document) return;
         const movePointer = createPointer(moveEvent);
 
@@ -85,7 +79,7 @@ const DraggableInner: React.FC<DraggableInnerProps> = memo(
       };
 
       const removeSensor = () => {
-        document.removeEventListener(moveEventName, handleDragMove);
+        document.removeEventListener('pointermove', handleDragMove);
       };
 
       const handleComplete = () => removeNodeStyles(targetNode);
@@ -120,7 +114,7 @@ const DraggableInner: React.FC<DraggableInnerProps> = memo(
         removeSensor();
         scope.removeSensor = null;
       };
-      document.addEventListener(moveEventName, handleDragMove);
+      document.addEventListener('pointermove', handleDragMove);
     };
 
     return children({
@@ -133,8 +127,7 @@ const DraggableInner: React.FC<DraggableInnerProps> = memo(
       },
       draggableProps: {
         [DRAGGABLE_HANDLER_ATTR]: true,
-        onMouseDown: handleStartEvent,
-        onTouchStart: handleStartEvent,
+        onPointerDown: handleStartEvent,
       },
       snapshot: {
         isDragging: isActive,
@@ -154,8 +147,7 @@ export type DraggableChildrenOptions = {
   };
   draggableProps: {
     [DRAGGABLE_HANDLER_ATTR]: true;
-    onMouseDown: (e: React.MouseEvent) => void;
-    onTouchStart: (e: React.TouchEvent) => void;
+    onPointerDown: (e: React.PointerEvent) => void;
   };
   snapshot: {
     isDragging: boolean;
@@ -179,9 +171,7 @@ function syncMove(options: SyncMoveOptions) {
   const { x, y } = getCoordinates({ movePointer, startPointer });
 
   transformNodePosition(targetNode, { x, y });
-  requestAnimationFrame(() => {
-    syncScroll({ movePointer, scrollContainer });
-  });
+  requestAnimationFrame(() => syncScroll({ movePointer, scrollContainer }));
 }
 
 type SyncScrollOptions = {
@@ -222,10 +212,7 @@ function getCoordinates(options: GetCoordinatesOptions): Coordinates {
   const x = movePointer.clientX - startPointer.clientX;
   const y = movePointer.clientY - startPointer.clientY;
 
-  return {
-    x,
-    y,
-  };
+  return { x, y };
 }
 
 function setNodeDragStyles(node: DraggableElement, rect: DOMRect) {
